@@ -147,7 +147,6 @@ public class DeliveryMapperTest {
         Store store = Store.builder().id(1L).name("TestStore").build();
         DeliverySlot deliverySlot = DeliverySlot.builder().id(1L).build();
 
-        // Test PENDING status
         Delivery pendingDelivery = Delivery.builder()
                 .id(1L)
                 .address("Address 1")
@@ -159,7 +158,6 @@ public class DeliveryMapperTest {
         DeliveryDto pendingDto = mapper.toDto(pendingDelivery);
         assertEquals("PENDING", pendingDto.getStatus());
 
-        // Test IN_PROGRESS status
         Delivery inProgressDelivery = Delivery.builder()
                 .id(2L)
                 .address("Address 2")
@@ -171,7 +169,6 @@ public class DeliveryMapperTest {
         DeliveryDto inProgressDto = mapper.toDto(inProgressDelivery);
         assertEquals("IN_PROGRESS", inProgressDto.getStatus());
 
-        // Test DELIVERED status
         Delivery deliveredDelivery = Delivery.builder()
                 .id(3L)
                 .address("Address 3")
@@ -183,7 +180,6 @@ public class DeliveryMapperTest {
         DeliveryDto deliveredDto = mapper.toDto(deliveredDelivery);
         assertEquals("DELIVERED", deliveredDto.getStatus());
 
-        // Test CANCELLED status
         Delivery cancelledDelivery = Delivery.builder()
                 .id(4L)
                 .address("Address 4")
