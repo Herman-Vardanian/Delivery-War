@@ -5,7 +5,7 @@ export default function AppNavbar() {
   const { pathname } = useLocation();
   const user = authModel.getUser();
 
-  const linkStyle = (path) => ({
+  const linkStyle = (path: string) => ({
     fontSize: '0.8rem',
     fontWeight: 600,
     letterSpacing: '0.04em',

@@ -1,6 +1,26 @@
 import { useState } from 'react';
 
-const MOCK_AUCTIONS = [
+interface AdminAuction {
+  id: number;
+  zone: string;
+  slot: string;
+  currentBid: number;
+  participants: number;
+  secondsLeft: number;
+  status: 'active' | 'closed';
+  winner: string;
+}
+
+interface MockStore {
+  id: string;
+  email: string;
+  balance: number;
+  totalSpent: number;
+  whalePass: boolean;
+  bids: number;
+}
+
+const MOCK_AUCTIONS: AdminAuction[] = [
   { id: 1, zone: 'Paris 18e', slot: '09h–11h', currentBid: 137, participants: 4, secondsLeft: 142, status: 'active',  winner: 'PARIS-NORD-07' },
   { id: 2, zone: 'Paris 11e', slot: '14h–16h', currentBid: 182, participants: 6, secondsLeft: 38,  status: 'active',  winner: 'BOULANGERIE-DUPONT' },
   { id: 3, zone: 'Paris 5e',  slot: '10h–12h', currentBid: 95,  participants: 3, secondsLeft: 310, status: 'active',  winner: 'FROMAGERIE-LEFEBVRE' },
@@ -9,7 +29,7 @@ const MOCK_AUCTIONS = [
   { id: 6, zone: 'Paris 3e',  slot: '13h–15h', currentBid: 165, participants: 5, secondsLeft: 0,   status: 'closed',  winner: 'ÉPICERIE-MARTIN' },
 ];
 
-const MOCK_STORES = [
+const MOCK_STORES: MockStore[] = [
   { id: 'PARIS-NORD-07',       email: 'contact@paris-nord.fr',    balance: 450,  totalSpent: 1240, whalePass: true,  bids: 3 },
   { id: 'BOULANGERIE-DUPONT',  email: 'dupont@boulangerie.fr',    balance: 320,  totalSpent: 3870, whalePass: true,  bids: 5 },
   { id: 'FROMAGERIE-LEFEBVRE', email: 'claire@fromagerie.fr',     balance: 180,  totalSpent: 2150, whalePass: false, bids: 2 },
@@ -20,7 +40,7 @@ const MOCK_STORES = [
 const ZONES = ['Paris 1er', 'Paris 2e', 'Paris 3e', 'Paris 4e', 'Paris 5e', 'Paris 6e', 'Paris 7e', 'Paris 8e', 'Paris 9e', 'Paris 10e', 'Paris 11e', 'Paris 12e', 'Paris 13e', 'Paris 14e', 'Paris 15e', 'Paris 16e', 'Paris 17e', 'Paris 18e', 'Paris 19e', 'Paris 20e'];
 const SLOTS = ['08h–10h', '09h–11h', '10h–12h', '11h–13h', '12h–14h', '13h–15h', '14h–16h', '15h–17h', '16h–18h', '17h–19h'];
 
-const TAB_STYLE = (active) => ({
+const TAB_STYLE = (active: boolean) => ({
   padding: '0.5rem 1.25rem',
   borderRadius: 6,
   border: 'none',
@@ -34,12 +54,11 @@ const TAB_STYLE = (active) => ({
 });
 
 export default function AdminDashboardPage() {
-  const [tab, setTab] = useState('auctions');
-  const [auctions, setAuctions] = useState(MOCK_AUCTIONS);
+  const [tab, setTab] = useState<'auctions' | 'stores'>('auctions');
+  const [auctions, setAuctions] = useState<AdminAuction[]>(MOCK_AUCTIONS);
   const [showNewForm, setShowNewForm] = useState(false);
-  const [newAuction, setNewAuction] = useState({ zone: ZONES[0], slot: SLOTS[0], startBid: '' });
+  const [newAuction, setNewAuction] = useState({ zone: ZONES[0]!, slot: SLOTS[0]!, startBid: '' });
 
-  const totalVolume   = auctions.reduce((s, a) => s + a.currentBid, 0);
   const activeCount   = auctions.filter((a) => a.status === 'active').length;
   const whaleCount    = MOCK_STORES.filter((s) => s.whalePass).length;
   const totalRevenue  = MOCK_STORES.reduce((s, st) => s + st.totalSpent, 0);
@@ -53,15 +72,15 @@ export default function AdminDashboardPage() {
       currentBid: parseFloat(newAuction.startBid),
       participants: 0,
       secondsLeft: 600,
-      status: 'active',
+      status: 'active' as const,
       winner: '—',
     }]);
-    setNewAuction({ zone: ZONES[0], slot: SLOTS[0], startBid: '' });
+    setNewAuction({ zone: ZONES[0]!, slot: SLOTS[0]!, startBid: '' });
     setShowNewForm(false);
   };
 
-  const closeAuction = (id) => {
-    setAuctions((prev) => prev.map((a) => a.id === id ? { ...a, status: 'closed', secondsLeft: 0 } : a));
+  const closeAuction = (id: number) => {
+    setAuctions((prev) => prev.map((a) => a.id === id ? { ...a, status: 'closed' as const, secondsLeft: 0 } : a));
   };
 
   return (

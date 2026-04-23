@@ -6,7 +6,7 @@ export default function ProfilePage() {
   const [balance, setBalance] = useState(0);
   const [whalePass, setWhalePass] = useState(false);
   const [customAmount, setCustomAmount] = useState('');
-  const [selectedAmount, setSelectedAmount] = useState(null);
+  const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [showTopupSuccess, setShowTopupSuccess] = useState(false);
   const [showWhaleSuccess, setShowWhaleSuccess] = useState(false);
 

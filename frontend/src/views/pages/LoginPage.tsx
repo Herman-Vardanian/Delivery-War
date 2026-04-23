@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useLogin } from '../../controllers/useAuth';
 import AuthBg from '../components/AuthBg';
@@ -8,9 +8,9 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const { login, loading, error } = useLogin();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    login(storeId, password);
+    void login(storeId, password);
   };
 
   return (

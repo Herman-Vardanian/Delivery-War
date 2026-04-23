@@ -1,7 +1,13 @@
-import { useState } from 'react';
+import { useState, type InputHTMLAttributes, type ReactNode } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 
-export default function Input({ label, error, type = 'text', rightLabel, className = '', ...props }) {
+interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
+  label?: string;
+  error?: string;
+  rightLabel?: ReactNode;
+}
+
+export default function Input({ label, error, type = 'text', rightLabel, className = '', ...props }: InputProps) {
   const [show, setShow] = useState(false);
   const isPassword = type === 'password';
 

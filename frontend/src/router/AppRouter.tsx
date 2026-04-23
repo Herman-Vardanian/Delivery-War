@@ -1,3 +1,4 @@
+import { type ReactNode } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import IndexPage from '../views/pages/IndexPage';
 import LoginPage from '../views/pages/LoginPage';
@@ -9,7 +10,7 @@ import LeaderboardPage from '../views/pages/LeaderboardPage';
 import Navbar from '../views/components/Navbar';
 import AppNavbar from '../views/components/AppNavbar';
 
-function PublicLayout({ children, showNav = true }) {
+function PublicLayout({ children, showNav = true }: { children: ReactNode; showNav?: boolean }) {
   return (
     <>
       {showNav && <Navbar />}
@@ -18,7 +19,7 @@ function PublicLayout({ children, showNav = true }) {
   );
 }
 
-function AppLayout({ children }) {
+function AppLayout({ children }: { children: ReactNode }) {
   return (
     <>
       <AppNavbar />

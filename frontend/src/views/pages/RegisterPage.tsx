@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import AuthBg from '../components/AuthBg';
 import { authModel } from '../../models/authModel';
 
-function PwdStrength({ value }) {
+function PwdStrength({ value }: { value: string }) {
   let score = 0;
   if (value.length >= 8)          score++;
   if (/[A-Z]/.test(value))        score++;
@@ -29,14 +29,14 @@ const ERR_STYLE = { fontSize: '0.7rem', color: 'var(--c-danger)', marginLeft: 'a
 export default function RegisterPage() {
   const navigate = useNavigate();
   const [form, setForm] = useState({ storeId: '', password: '', confirm: '', email: '', address: '' });
-  const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [apiError, setApiError] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const next = {};
+    const next: Record<string, string> = {};
 
     if (!form.storeId.trim())
       next.storeId = 'Obligatoire';
@@ -60,7 +60,7 @@ export default function RegisterPage() {
       authModel.saveUser(store);
       setSuccess(true);
     } catch (err) {
-      setApiError(err.message);
+      setApiError(err instanceof Error ? err.message : 'Erreur inconnue');
     } finally {
       setLoading(false);
     }

@@ -4,10 +4,10 @@ import { authModel } from '../models/authModel';
 
 export function useLogin() {
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  const login = async (storeId, password) => {
+  const login = async (storeId: string, password: string): Promise<void> => {
     setLoading(true);
     setError(null);
     try {
@@ -15,7 +15,7 @@ export function useLogin() {
       authModel.saveUser(store);
       navigate('/dashboard');
     } catch (err) {
-      setError(err.message);
+      setError(err instanceof Error ? err.message : 'Erreur inconnue');
     } finally {
       setLoading(false);
     }
@@ -24,21 +24,27 @@ export function useLogin() {
   return { login, loading, error };
 }
 
+interface RegisterPayload {
+  storeId: string;
+  password: string;
+  email: string;
+  address?: string;
+}
+
 export function useRegister() {
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   // payload = { name, storeId, password, balance, whalePass }
-  const register = async (payload) => {
+  const register = async (payload: RegisterPayload): Promise<void> => {
     setLoading(true);
     setError(null);
     try {
-      const data = await authModel.register(payload);
-      authModel.saveToken(data.token);
+      await authModel.register(payload);
       navigate('/dashboard');
     } catch (err) {
-      setError(err.message);
+      setError(err instanceof Error ? err.message : 'Erreur inconnue');
     } finally {
       setLoading(false);
     }

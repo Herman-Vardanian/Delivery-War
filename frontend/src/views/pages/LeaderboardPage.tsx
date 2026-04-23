@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
+import { type Store } from '../../models/authModel';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 
 const MEDALS = ['🥇', '🥈', '🥉'];
 
 export default function LeaderboardPage() {
-  const [stores, setStores] = useState([]);
+  const [stores, setStores] = useState<Store[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -13,13 +14,13 @@ export default function LeaderboardPage() {
     fetch(`${API_BASE}/stores`)
       .then((r) => {
         if (!r.ok) throw new Error('Erreur serveur');
-        return r.json();
+        return r.json() as Promise<Store[]>;
       })
       .then((data) => {
         const sorted = [...data].sort((a, b) => (b.totalSpent ?? 0) - (a.totalSpent ?? 0));
         setStores(sorted);
       })
-      .catch((e) => setError(e.message))
+      .catch((e: unknown) => setError(e instanceof Error ? e.message : 'Erreur inconnue'))
       .finally(() => setLoading(false));
   }, []);
 

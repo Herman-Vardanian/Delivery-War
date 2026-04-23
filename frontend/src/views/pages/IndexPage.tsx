@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import TrucksBg from '../components/TrucksBg';
 
 export default function IndexPage() {
-  const auctionsRef = useRef(null);
+  const auctionsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let auctions = 1247;

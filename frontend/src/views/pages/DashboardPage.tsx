@@ -1,7 +1,20 @@
 import { useState, useEffect } from 'react';
 import { authModel } from '../../models/authModel';
 
-const MOCK_AUCTIONS = [
+type AuctionStatus = 'leading' | 'outbid' | 'open' | 'won' | 'lost';
+
+interface Auction {
+  id: number;
+  zone: string;
+  slot: string;
+  currentBid: number;
+  myBid: number | null;
+  participants: number;
+  secondsLeft: number;
+  status: AuctionStatus;
+}
+
+const MOCK_AUCTIONS: Auction[] = [
   { id: 1, zone: 'Paris 18e', slot: '09h–11h', currentBid: 137, myBid: 137, participants: 4, secondsLeft: 142, status: 'leading' },
   { id: 2, zone: 'Paris 11e', slot: '14h–16h', currentBid: 182, myBid: 150, participants: 6, secondsLeft: 38,  status: 'outbid' },
   { id: 3, zone: 'Paris 5e',  slot: '10h–12h', currentBid: 95,  myBid: null, participants: 3, secondsLeft: 310, status: 'open' },
@@ -10,12 +23,13 @@ const MOCK_AUCTIONS = [
   { id: 6, zone: 'Paris 3e',  slot: '13h–15h', currentBid: 165, myBid: 120, participants: 5, secondsLeft: 0,   status: 'lost' },
 ];
 
-function Timer({ seconds }) {
+function Timer({ seconds }: { seconds: number }) {
   const [s, setS] = useState(seconds);
   useEffect(() => {
     if (s <= 0) return;
     const id = setInterval(() => setS((v) => Math.max(0, v - 1)), 1000);
     return () => clearInterval(id);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   if (s <= 0) return <span style={{ color: 'var(--c-text3)', fontSize: '0.75rem' }}>Terminé</span>;
   const m = Math.floor(s / 60);
@@ -40,15 +54,15 @@ export default function DashboardPage() {
   const user = authModel.getUser();
   const storeName = user?.name || '—';
 
-  const [auctions, setAuctions] = useState(MOCK_AUCTIONS);
-  const [bidInputs, setBidInputs] = useState({});
+  const [auctions, setAuctions] = useState<Auction[]>(MOCK_AUCTIONS);
+  const [bidInputs, setBidInputs] = useState<Record<number, string>>({});
 
-  const placeBid = (id) => {
-    const amount = parseFloat(bidInputs[id]);
+  const placeBid = (id: number) => {
+    const amount = parseFloat(bidInputs[id] ?? '');
     if (!amount) return;
     setAuctions((prev) => prev.map((a) =>
       a.id === id && amount > a.currentBid
-        ? { ...a, currentBid: amount, myBid: amount, status: 'leading' }
+        ? { ...a, currentBid: amount, myBid: amount, status: 'leading' as AuctionStatus }
         : a
     ));
     setBidInputs((prev) => ({ ...prev, [id]: '' }));
