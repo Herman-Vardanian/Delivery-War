@@ -13,13 +13,16 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -31,13 +34,16 @@ public class AuctionServiceTest {
         @Mock
         private DeliverySlotRepository deliverySlotRepository;
 
+        @Mock
+        private SimpMessagingTemplate messagingTemplate;
+
         private final AuctionMapper mapper = new AuctionMapper();
 
         private AuctionService service;
 
         @BeforeEach
         void setUp() {
-                service = new AuctionService(repository, mapper, deliverySlotRepository);
+                service = new AuctionService(repository, mapper, deliverySlotRepository, messagingTemplate);
         }
 
         @Test
@@ -53,6 +59,8 @@ public class AuctionServiceTest {
                 DeliverySlot slot = DeliverySlot.builder().id(1L).build();
 
                 when(deliverySlotRepository.findById(1L)).thenReturn(Optional.of(slot));
+                when(repository.findAll()).thenReturn(Collections.emptyList());
+                doNothing().when(messagingTemplate).convertAndSend(anyString(), any(Object.class));
 
                 Auction savedEntity = Auction.builder()
                                 .id(1L)

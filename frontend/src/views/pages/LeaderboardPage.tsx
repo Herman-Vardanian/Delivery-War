@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { type Store } from '../../interfaces/Store';
-
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+import { stores as storesApi } from '../../controllers/endpoints';
 
 const MEDALS = ['🥇', '🥈', '🥉'];
 
@@ -11,11 +10,7 @@ export default function LeaderboardPage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    fetch(`${API_BASE}/stores`)
-      .then((r) => {
-        if (!r.ok) throw new Error('Erreur serveur');
-        return r.json() as Promise<Store[]>;
-      })
+    storesApi.all()
       .then((data) => {
         const sorted = [...data]
           .filter((s) => s.role !== 'ADMIN')

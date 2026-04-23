@@ -1,10 +1,16 @@
 import { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { authModel } from '../../models/authModel';
 
 export default function AppNavbar() {
   const { pathname } = useLocation();
+  const navigate = useNavigate();
   const [user, setUser] = useState(authModel.getUser());
+
+  const handleLogout = () => {
+    authModel.removeUser();
+    navigate('/login');
+  };
 
   useEffect(() => {
     const onUpdate = () => setUser(authModel.getUser());
@@ -39,7 +45,7 @@ export default function AppNavbar() {
       borderBottom: '1px solid var(--c-border)',
       padding: '0 2rem',
     }}>
-      <Link to="/" style={{ fontFamily: 'var(--font-d)', fontSize: '1.4rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.03em', textDecoration: 'none', color: '#fff', marginRight: '2rem', flexShrink: 0 }}>
+      <Link to="/dashboard" style={{ fontFamily: 'var(--font-d)', fontSize: '1.4rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.03em', textDecoration: 'none', color: '#fff', marginRight: '2rem', flexShrink: 0 }}>
         Delivery<span style={{ color: 'var(--c-pri)' }}>War</span>
       </Link>
 
@@ -60,12 +66,12 @@ export default function AppNavbar() {
             € {user?.balance != null ? Number(user.balance).toLocaleString('fr-FR', { minimumFractionDigits: 2 }) : '0,00'}
           </div>
         </div>
-        <Link
-          to="/login"
-          style={{ fontSize: '0.75rem', color: 'var(--c-text3)', textDecoration: 'none', padding: '0.35rem 0.75rem', border: '1px solid var(--c-border)', borderRadius: 6, transition: 'all .15s' }}
+        <button
+          onClick={handleLogout}
+          style={{ fontSize: '0.75rem', color: 'var(--c-text3)', background: 'transparent', padding: '0.35rem 0.75rem', border: '1px solid var(--c-border)', borderRadius: 6, transition: 'all .15s', cursor: 'pointer' }}
         >
           Déconnexion
-        </Link>
+        </button>
       </div>
     </header>
   );

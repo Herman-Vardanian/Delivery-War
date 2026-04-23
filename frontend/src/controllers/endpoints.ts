@@ -71,9 +71,7 @@ export const stores = {
     all: () => api.get<Store[]>('/stores'),
     byId: (id: number) => api.get<Store>(`/stores/${id}`),
 
-    // Auth (remplace authModel)
     create: (data: Store) => api.post<Store>('/stores', data),
-    login: (name: string, password: string) => api.post<Store>('/stores/login', { name, password }),
 
     // Mutations
     update: (id: number, data: Store) => api.put<Store>(`/stores/${id}`, data),

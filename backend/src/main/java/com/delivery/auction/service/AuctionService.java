@@ -8,6 +8,7 @@ import com.delivery.auction.repository.AuctionRepository;
 import com.delivery.common.exception.ResourceNotFoundException;
 import com.delivery.deliverySlot.entity.DeliverySlot;
 import com.delivery.deliverySlot.repository.DeliverySlotRepository;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,13 +23,16 @@ public class AuctionService {
     private final AuctionRepository repository;
     private final AuctionMapper mapper;
     private final DeliverySlotRepository deliverySlotRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
     public AuctionService(AuctionRepository repository,
             AuctionMapper mapper,
-            DeliverySlotRepository deliverySlotRepository) {
+            DeliverySlotRepository deliverySlotRepository,
+            SimpMessagingTemplate messagingTemplate) {
         this.repository = repository;
         this.mapper = mapper;
         this.deliverySlotRepository = deliverySlotRepository;
+        this.messagingTemplate = messagingTemplate;
     }
 
     public AuctionDto createAuction(AuctionDto dto) {
@@ -38,7 +42,6 @@ public class AuctionService {
                 .orElseThrow(() -> new ResourceNotFoundException("Delivery slot not found"));
 
         Auction auction = mapper.toEntity(dto, slot);
-
         auction.setId(null);
 
         if (auction.getStatus() == null) {
@@ -46,6 +49,13 @@ public class AuctionService {
         }
 
         Auction saved = repository.save(auction);
+
+        // Broadcast updated list to all connected clients
+        List<AuctionDto> allAuctions = repository.findAll().stream()
+                .map(mapper::toDto)
+                .toList();
+        messagingTemplate.convertAndSend("/topic/auctions", allAuctions);
+
         return mapper.toDto(saved);
     }
 
@@ -53,7 +63,6 @@ public class AuctionService {
     public AuctionDto getAuction(Long id) {
         Auction auction = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Auction not found with id: " + id));
-
         return mapper.toDto(auction);
     }
 
@@ -72,7 +81,6 @@ public class AuctionService {
                 .orElseThrow(() -> new ResourceNotFoundException("Auction not found with id: " + id));
 
         DeliverySlot slot = null;
-
         if (dto.getDeliverySlotId() != null) {
             slot = deliverySlotRepository.findById(dto.getDeliverySlotId())
                     .orElseThrow(() -> new ResourceNotFoundException("Delivery slot not found"));

@@ -1,6 +1,27 @@
 version: '3.8'
 
 services:
+  delivery-db:
+    image: postgres:15-alpine
+    container_name: delivery-db
+    environment:
+      - POSTGRES_DB=delivery
+      - POSTGRES_USER=delivery
+      - POSTGRES_PASSWORD=delivery123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "delivery", "-d", "delivery"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - delivery-network
+
   delivery-backend:
     build:
       context: ./backend
@@ -9,8 +30,13 @@ services:
       - "8080:8080"
     environment:
       - SPRING_PROFILES_ACTIVE=prod
+      - DB_USER=delivery
+      - DB_PASSWORD=delivery123
       - JAVA_OPTS=-Xmx512m -Xms256m
     restart: unless-stopped
+    depends_on:
+      delivery-db:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
       interval: 30s
@@ -38,27 +64,9 @@ services:
     networks:
       - delivery-network
 
-  delivery-db:
-    image: postgres:15-alpine
-    container_name: delivery-db
-    environment:
-      - POSTGRES_DB=delivery
-      - POSTGRES_USER=delivery
-      - POSTGRES_PASSWORD=delivery123
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    restart: unless-stopped
-    networks:
-      - delivery-network
-    profiles:
-      - postgres
-
 volumes:
   postgres_data:
 
 networks:
   delivery-network:
     driver: bridge
-

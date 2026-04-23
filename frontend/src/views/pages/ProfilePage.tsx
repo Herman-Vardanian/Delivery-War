@@ -23,6 +23,12 @@ export default function ProfilePage() {
       .catch(() => { /* keep local data on network error */ });
   }, []);
 
+  useEffect(() => {
+    const onUpdate = () => setStore(authModel.getUser());
+    window.addEventListener('user-updated', onUpdate);
+    return () => window.removeEventListener('user-updated', onUpdate);
+  }, []);
+
   const topupAmount = selectedAmount ?? (parseFloat(customAmount) || 0);
 
   const handleTopup = async () => {

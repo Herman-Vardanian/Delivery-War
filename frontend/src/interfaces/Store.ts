@@ -6,7 +6,7 @@ export enum StoreTypeEnum {
 export interface Store {
     "id": number,
     "name": string,
-    "password": string,
+    "password"?: string,
     "role": string,
     "email": string,
     "address": string,

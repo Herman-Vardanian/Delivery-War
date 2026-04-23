@@ -9,6 +9,8 @@ import AdminDashboardPage from '../views/pages/AdminDashboardPage';
 import LeaderboardPage from '../views/pages/LeaderboardPage';
 import Navbar from '../views/components/Navbar';
 import AppNavbar from '../views/components/AppNavbar';
+import { RequireAuth, RequireAdmin } from './guards';
+import { authModel } from '../models/authModel';
 
 function PublicLayout({ children, showNav = true }: { children: ReactNode; showNav?: boolean }) {
   return (
@@ -35,57 +37,57 @@ export default function AppRouter() {
         <Route
           path="/"
           element={
-            <PublicLayout>
-              <IndexPage />
-            </PublicLayout>
+            authModel.isAuthenticated()
+              ? <Navigate to="/dashboard" replace />
+              : <PublicLayout><IndexPage /></PublicLayout>
           }
         />
         <Route
           path="/login"
           element={
-            <PublicLayout showNav={false}>
-              <LoginPage />
-            </PublicLayout>
+            authModel.isAuthenticated()
+              ? <Navigate to="/dashboard" replace />
+              : <PublicLayout showNav={false}><LoginPage /></PublicLayout>
           }
         />
         <Route
           path="/register"
           element={
-            <PublicLayout showNav={false}>
-              <RegisterPage />
-            </PublicLayout>
+            authModel.isAuthenticated()
+              ? <Navigate to="/dashboard" replace />
+              : <PublicLayout showNav={false}><RegisterPage /></PublicLayout>
           }
         />
         <Route
           path="/dashboard"
           element={
-            <AppLayout>
-              <DashboardPage />
-            </AppLayout>
+            <RequireAuth>
+              <AppLayout><DashboardPage /></AppLayout>
+            </RequireAuth>
           }
         />
         <Route
           path="/admin"
           element={
-            <AppLayout>
-              <AdminDashboardPage />
-            </AppLayout>
+            <RequireAdmin>
+              <AppLayout><AdminDashboardPage /></AppLayout>
+            </RequireAdmin>
           }
         />
         <Route
           path="/profile"
           element={
-            <AppLayout>
-              <ProfilePage />
-            </AppLayout>
+            <RequireAuth>
+              <AppLayout><ProfilePage /></AppLayout>
+            </RequireAuth>
           }
         />
         <Route
           path="/leaderboard"
           element={
-            <AppLayout>
-              <LeaderboardPage />
-            </AppLayout>
+            <RequireAuth>
+              <AppLayout><LeaderboardPage /></AppLayout>
+            </RequireAuth>
           }
         />
         <Route path="*" element={<Navigate to="/" replace />} />

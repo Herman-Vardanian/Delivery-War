@@ -1,22 +1,21 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { authModel } from '../../models/authModel';
-import { auctions as auctionsApi, bids as bidsApi, stores as storesApi } from '../../controllers/endpoints';
 import { api } from '../../controllers/utils';
 import type { Auction as BackendAuction } from '../../interfaces/Auction';
 import type { Bid } from '../../interfaces/Bid';
 import type { DeliverySlot } from '../../interfaces/DeliverySlot';
 import { AuctionStatus } from '../../interfaces/Auction';
+import { useAuctions } from '../../hooks/useAuctions';
+import type { DisplayStatus } from '../../hooks/useAuctions';
 
-type DisplayStatus = 'leading' | 'outbid' | 'open' | 'pending' | 'won' | 'lost';
-
-interface DisplayAuction {
-  id: number;
-  slot: string;
-  endTime: string;
-  currentBid: number;
-  myBid: number | null;
-  status: DisplayStatus;
-}
+const STATUS_CONFIG: Record<DisplayStatus, { label: string; color: string; bg: string; border: string }> = {
+  leading: { label: 'En tête',     color: 'var(--c-success)',   bg: 'rgba(72,199,142,.1)',   border: 'rgba(72,199,142,.25)' },
+  outbid:  { label: 'Surenchéri',  color: 'var(--c-danger)',    bg: 'rgba(255,77,77,.1)',     border: 'rgba(255,77,77,.25)'  },
+  open:    { label: 'Disponible',  color: 'var(--c-pri)',       bg: 'rgba(255,107,26,.08)',   border: 'rgba(255,107,26,.2)'  },
+  pending: { label: 'À venir',     color: 'var(--c-text3)',     bg: 'rgba(255,255,255,.04)',  border: 'var(--c-border)'      },
+  won:     { label: '🏆 Remporté', color: 'var(--c-gold-s)',    bg: 'rgba(255,193,7,.08)',    border: 'rgba(255,193,7,.2)'   },
+  lost:    { label: 'Perdu',       color: 'var(--c-text3)',     bg: 'rgba(255,255,255,.04)',  border: 'var(--c-border)'      },
+};
 
 function Timer({ endTime }: { endTime: string }) {
   const calc = () => Math.max(0, Math.floor((new Date(endTime + 'Z').getTime() - Date.now()) / 1000));
@@ -37,60 +36,27 @@ function Timer({ endTime }: { endTime: string }) {
   );
 }
 
-const STATUS_CONFIG = {
-  leading: { label: 'En tête',     color: 'var(--c-success)',   bg: 'rgba(72,199,142,.1)',   border: 'rgba(72,199,142,.25)' },
-  outbid:  { label: 'Surenchéri',  color: 'var(--c-danger)',    bg: 'rgba(255,77,77,.1)',     border: 'rgba(255,77,77,.25)' },
-  open:    { label: 'Disponible',  color: 'var(--c-pri)',       bg: 'rgba(255,107,26,.08)',   border: 'rgba(255,107,26,.2)' },
-  pending: { label: 'À venir',     color: 'var(--c-text3)',    bg: 'rgba(255,255,255,.04)',  border: 'var(--c-border)' },
-  won:     { label: '🏆 Remporté', color: 'var(--c-gold-s)',   bg: 'rgba(255,193,7,.08)',    border: 'rgba(255,193,7,.2)' },
-  lost:    { label: 'Perdu',       color: 'var(--c-text3)',    bg: 'rgba(255,255,255,.04)',  border: 'var(--c-border)' },
-};
-
-function fmtHour(iso: string): string {
-  const d = new Date(iso + 'Z');
-  const h = d.getHours();
-  const min = d.getMinutes();
-  return `${h}h${min > 0 ? String(min).padStart(2, '0') : ''}`;
+function CountDown({ startTime }: { startTime: string }) {
+  const calc = () => Math.max(0, Math.floor((new Date(startTime + 'Z').getTime() - Date.now()) / 1000));
+  const [s, setS] = useState(calc);
+  useEffect(() => {
+    const id = setInterval(() => setS(calc), 1000);
+    return () => clearInterval(id);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [startTime]);
+  if (s <= 0) return <span style={{ color: 'var(--c-text3)', fontSize: '0.75rem' }}>Bientôt</span>;
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  return (
+    <span style={{ fontWeight: 600, fontSize: '0.8rem', color: 'var(--c-text3)', fontVariantNumeric: 'tabular-nums' }}>
+      dans {h > 0 ? `${h}h ` : ''}{m > 0 ? `${m}m ` : ''}{String(sec).padStart(2, '0')}s
+    </span>
+  );
 }
 
 function toIsoLocal(date: Date): string {
   return date.toISOString().slice(0, 19);
-}
-
-function buildAuction(
-  a: BackendAuction,
-  highest: Bid | null,
-  userBidMap: Map<number, Bid>,
-  userId: number | undefined,
-): DisplayAuction {
-  const now = Date.now();
-  const startMs = a.startTime ? new Date(a.startTime + 'Z').getTime() : now;
-  const endMs = a.endTime ? new Date(a.endTime + 'Z').getTime() : now;
-  const notStarted = startMs > now;
-  const currentBid = highest?.amount ?? a.startPrice ?? 0;
-  const slot = a.slotStartTime && a.slotEndTime
-    ? `${fmtHour(a.slotStartTime)}–${fmtHour(a.slotEndTime)}`
-    : a.startTime && a.endTime ? `${fmtHour(a.startTime)}–${fmtHour(a.endTime)}` : '—';
-  const myBidEntry = userBidMap.get(a.id);
-  const myBid = myBidEntry?.amount ?? null;
-  const isLeading = highest?.storeId === userId;
-
-  const finished = endMs <= now || a.status === AuctionStatus.CLOSED;
-
-  let status: DisplayStatus;
-  if (finished && !notStarted) {
-    status = isLeading ? 'won' : 'lost';
-  } else if (isLeading) {
-    status = 'leading';
-  } else if (notStarted) {
-    status = 'pending';
-  } else if (myBid !== null) {
-    status = 'outbid';
-  } else {
-    status = 'open';
-  }
-
-  return { id: a.id, slot, endTime: a.endTime ?? '', currentBid, myBid, status };
 }
 
 function nowLocalInput(): string {
@@ -111,140 +77,88 @@ interface NewAuctionForm {
 
 export default function DashboardPage() {
   const [user, setUser] = useState(authModel.getUser());
-  const storeName = user?.name || '—';
   const isAdmin = user?.role === 'ADMIN';
 
-  const [auctions, setAuctions] = useState<DisplayAuction[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const { auctions, loading, error } = useAuctions();
+
+  // Keep user state in sync with WS balance updates
+  useEffect(() => {
+    const onUpdate = () => setUser(authModel.getUser());
+    window.addEventListener('user-updated', onUpdate);
+    return () => window.removeEventListener('user-updated', onUpdate);
+  }, []);
+
   const [bidInputs, setBidInputs] = useState<Record<number, string>>({});
   const [bidErrors, setBidErrors] = useState<Record<number, string>>({});
 
-  const [newAuction, setNewAuction] = useState<NewAuctionForm>({ deliveryDate: '', deliveryStartTime: '', deliveryEndTime: '', auctionStart: nowLocalInput(), durationMin: '5', startBid: '' });
+  const [newAuction, setNewAuction] = useState<NewAuctionForm>({
+    deliveryDate: '', deliveryStartTime: '', deliveryEndTime: '',
+    auctionStart: nowLocalInput(), durationMin: '5', startBid: '',
+  });
   const [createError, setCreateError] = useState('');
   const [creating, setCreating] = useState(false);
 
-  const pauseRefresh = useRef(false);
-
-  const onFormFocus = () => { pauseRefresh.current = true; };
-  const onFormBlur = (e: React.FocusEvent<HTMLDivElement>) => {
-    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-      pauseRefresh.current = false;
-    }
-  };
-
-  const loadAuctions = useCallback(async () => {
-    try {
-      const list = await auctionsApi.all();
-      const userBidMap = new Map<number, Bid>();
-      if (user?.id) {
-        const myBids = await bidsApi.byStore(user.id);
-        for (const b of myBids) {
-          const prev = userBidMap.get(b.auctionId);
-          if (!prev || b.amount > prev.amount) {
-            userBidMap.set(b.auctionId, b);
-          }
-        }
-      }
-      const withBids = await Promise.all(
-        list.map(async (a) => {
-          let highest: Bid | null = null;
-          try { highest = await auctionsApi.highestBid(a.id); } catch { /* 404 = pas de mise */ }
-          return buildAuction(a, highest, userBidMap, user?.id);
-        })
-      );
-      setAuctions(withBids);
-      setError('');
-
-      if (user?.id) {
-        try {
-          const fresh = await storesApi.byId(user.id);
-          setUser(fresh);
-          authModel.saveUser(fresh);
-          window.dispatchEvent(new Event('user-updated'));
-        } catch { /* keep local balance on network error */ }
-      }
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Erreur inconnue');
-    } finally {
-      setLoading(false);
-    }
-  }, [user?.id]);
-
-  useEffect(() => {
-    void loadAuctions();
-    const id = setInterval(() => {
-      if (!pauseRefresh.current) void loadAuctions();
-    }, 5000);
-    return () => clearInterval(id);
-  }, [loadAuctions]);
-
   const createAuction = async () => {
-    if (!newAuction.deliveryDate) { setCreateError('La date de livraison est requise.'); return; }
-    if (!newAuction.deliveryStartTime) { setCreateError('L\'heure de début de livraison est requise.'); return; }
-    if (!newAuction.deliveryEndTime) { setCreateError('L\'heure de fin de livraison est requise.'); return; }
-    if (!newAuction.startBid) { setCreateError('Le prix de départ est requis.'); return; }
+    if (!newAuction.deliveryDate)      { setCreateError('La date de livraison est requise.'); return; }
+    if (!newAuction.deliveryStartTime) { setCreateError("L'heure de début est requise."); return; }
+    if (!newAuction.deliveryEndTime)   { setCreateError("L'heure de fin est requise."); return; }
+    if (!newAuction.startBid)          { setCreateError('Le prix de départ est requis.'); return; }
     const startBid = parseFloat(newAuction.startBid);
     if (isNaN(startBid) || startBid <= 0) { setCreateError('Prix de départ invalide.'); return; }
 
     const deliveryStart = new Date(`${newAuction.deliveryDate}T${newAuction.deliveryStartTime}`);
-    const deliveryEnd = new Date(`${newAuction.deliveryDate}T${newAuction.deliveryEndTime}`);
-    const auctionBegin = newAuction.auctionStart ? new Date(newAuction.auctionStart) : new Date();
-    const durationMin = parseInt(newAuction.durationMin) || 5;
-    const auctionEnd = new Date(auctionBegin.getTime() + durationMin * 60 * 1000);
+    const deliveryEnd   = new Date(`${newAuction.deliveryDate}T${newAuction.deliveryEndTime}`);
+    const auctionBegin  = newAuction.auctionStart ? new Date(newAuction.auctionStart) : new Date();
+    const durationMin   = parseInt(newAuction.durationMin) || 5;
+    const auctionEnd    = new Date(auctionBegin.getTime() + durationMin * 60 * 1000);
 
     setCreateError('');
     setCreating(true);
-    pauseRefresh.current = true;
     try {
       const slot = await api.post<DeliverySlot>('/deliverySlots', {
         startTime: toIsoLocal(deliveryStart),
-        endTime: toIsoLocal(deliveryEnd),
+        endTime:   toIsoLocal(deliveryEnd),
         capacity: 1,
         status: 'OPEN',
       });
       await api.post<BackendAuction>('/auctions', {
-        startPrice: startBid,
-        startTime: toIsoLocal(auctionBegin),
-        endTime: toIsoLocal(auctionEnd),
-        status: AuctionStatus.OPEN,
+        startPrice:    startBid,
+        startTime:     toIsoLocal(auctionBegin),
+        endTime:       toIsoLocal(auctionEnd),
+        status:        AuctionStatus.OPEN,
         deliverySlotId: slot.id,
       });
       setNewAuction({ deliveryDate: '', deliveryStartTime: '', deliveryEndTime: '', auctionStart: nowLocalInput(), durationMin: '5', startBid: '' });
-      await loadAuctions();
+      // WS /topic/auctions push handles the list refresh automatically
     } catch (e: unknown) {
       setCreateError(e instanceof Error ? e.message : 'Erreur création');
     } finally {
       setCreating(false);
-      pauseRefresh.current = false;
     }
   };
 
-  const placeBid = async (a: DisplayAuction) => {
-    const amount = parseFloat(bidInputs[a.id] ?? '');
-    if (!amount || amount <= a.currentBid) {
-      setBidErrors((p) => ({ ...p, [a.id]: `Montant doit être > ${a.currentBid} €` }));
+  const placeBid = async (auctionId: number, currentBid: number) => {
+    const amount = parseFloat(bidInputs[auctionId] ?? '');
+    if (!amount || amount <= currentBid) {
+      setBidErrors(p => ({ ...p, [auctionId]: `Montant doit être > ${currentBid} €` }));
       return;
     }
     if (!user?.id) return;
-    setBidErrors((p) => ({ ...p, [a.id]: '' }));
-    pauseRefresh.current = true;
+    setBidErrors(p => ({ ...p, [auctionId]: '' }));
     try {
-      await api.post<Bid>('/bids', { auctionId: a.id, storeId: user.id, amount });
-      setBidInputs((p) => ({ ...p, [a.id]: '' }));
-      await loadAuctions();
+      await api.post<Bid>('/bids', { auctionId, storeId: user.id, amount });
+      setBidInputs(p => ({ ...p, [auctionId]: '' }));
+      // WS /topic/bids + /queue/store/{id}/balance handle the display refresh
     } catch (e: unknown) {
-      setBidErrors((p) => ({ ...p, [a.id]: e instanceof Error ? e.message : 'Erreur mise' }));
-    } finally {
-      pauseRefresh.current = false;
+      setBidErrors(p => ({ ...p, [auctionId]: e instanceof Error ? e.message : 'Erreur mise' }));
     }
   };
 
-  const active   = auctions.filter((a) => a.status === 'leading' || a.status === 'outbid' || a.status === 'open');
-  const upcoming = auctions.filter((a) => a.status === 'pending');
-  const closed   = auctions.filter((a) => a.status === 'won' || a.status === 'lost');
-  const leading = auctions.filter((a) => a.status === 'leading').length;
-  const outbid  = auctions.filter((a) => a.status === 'outbid').length;
+  const active   = auctions.filter(a => a.status === 'leading' || a.status === 'outbid' || a.status === 'open');
+  const upcoming = auctions.filter(a => a.status === 'pending');
+  const closed   = auctions.filter(a => a.status === 'won' || a.status === 'lost');
+  const leading  = auctions.filter(a => a.status === 'leading').length;
+  const outbid   = auctions.filter(a => a.status === 'outbid').length;
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--c-bg)', padding: '2rem 1.5rem' }}>
@@ -254,13 +168,13 @@ export default function DashboardPage() {
         <div style={{ marginBottom: '1.75rem' }}>
           <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--c-text3)', marginBottom: '0.3rem' }}>Tableau de bord</div>
           <h1 style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--c-text)', margin: 0 }}>
-            Bienvenue, <span style={{ color: 'var(--c-pri)' }}>{storeName}</span>
+            Bienvenue, <span style={{ color: 'var(--c-pri)' }}>{user?.name || '—'}</span>
           </h1>
         </div>
 
-        {/* ── Section Admin : Créer une enchère ── */}
+        {/* ── Section Admin ── */}
         {isAdmin && (
-          <div onFocus={onFormFocus} onBlur={onFormBlur} style={{ background: 'rgba(255,107,26,.06)', border: '1px solid rgba(255,107,26,.25)', borderRadius: 12, padding: '1.25rem 1.5rem', marginBottom: '1.75rem' }}>
+          <div style={{ background: 'rgba(255,107,26,.06)', border: '1px solid rgba(255,107,26,.25)', borderRadius: 12, padding: '1.25rem 1.5rem', marginBottom: '1.75rem' }}>
             <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--c-pri)', marginBottom: '0.75rem', fontWeight: 700 }}>
               Admin — Créer une enchère
             </div>
@@ -269,45 +183,45 @@ export default function DashboardPage() {
               <div>
                 <label style={{ fontSize: '0.68rem', color: 'var(--c-text3)', display: 'block', marginBottom: '0.3rem' }}>Date</label>
                 <input type="date" value={newAuction.deliveryDate}
-                  onChange={(e) => setNewAuction((p) => ({ ...p, deliveryDate: e.target.value }))}
+                  onChange={e => setNewAuction(p => ({ ...p, deliveryDate: e.target.value }))}
                   style={{ width: '100%', boxSizing: 'border-box', background: 'var(--c-bg)', border: '1px solid var(--c-border)', borderRadius: 6, padding: '0.45rem 0.65rem', fontSize: '0.82rem', color: 'var(--c-text)', outline: 'none', colorScheme: 'dark' }}
                 />
               </div>
               <div>
                 <label style={{ fontSize: '0.68rem', color: 'var(--c-text3)', display: 'block', marginBottom: '0.3rem' }}>Heure de début</label>
                 <input type="time" value={newAuction.deliveryStartTime}
-                  onChange={(e) => setNewAuction((p) => ({ ...p, deliveryStartTime: e.target.value }))}
+                  onChange={e => setNewAuction(p => ({ ...p, deliveryStartTime: e.target.value }))}
                   style={{ width: '100%', boxSizing: 'border-box', background: 'var(--c-bg)', border: '1px solid var(--c-border)', borderRadius: 6, padding: '0.45rem 0.65rem', fontSize: '0.82rem', color: 'var(--c-text)', outline: 'none', colorScheme: 'dark' }}
                 />
               </div>
               <div>
                 <label style={{ fontSize: '0.68rem', color: 'var(--c-text3)', display: 'block', marginBottom: '0.3rem' }}>Heure de fin</label>
                 <input type="time" value={newAuction.deliveryEndTime}
-                  onChange={(e) => setNewAuction((p) => ({ ...p, deliveryEndTime: e.target.value }))}
+                  onChange={e => setNewAuction(p => ({ ...p, deliveryEndTime: e.target.value }))}
                   style={{ width: '100%', boxSizing: 'border-box', background: 'var(--c-bg)', border: '1px solid var(--c-border)', borderRadius: 6, padding: '0.45rem 0.65rem', fontSize: '0.82rem', color: 'var(--c-text)', outline: 'none', colorScheme: 'dark' }}
                 />
               </div>
             </div>
             <div style={{ fontSize: '0.65rem', color: 'var(--c-text3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.4rem' }}>Enchère</div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr auto', gap: '0.75rem', alignItems: 'end' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr auto', gap: '0.75rem', alignItems: 'end' }}>
               <div>
                 <label style={{ fontSize: '0.68rem', color: 'var(--c-text3)', display: 'block', marginBottom: '0.3rem' }}>Début de l'enchère</label>
                 <input type="datetime-local" value={newAuction.auctionStart}
-                  onChange={(e) => setNewAuction((p) => ({ ...p, auctionStart: e.target.value }))}
+                  onChange={e => setNewAuction(p => ({ ...p, auctionStart: e.target.value }))}
                   style={{ width: '100%', boxSizing: 'border-box', background: 'var(--c-bg)', border: '1px solid var(--c-border)', borderRadius: 6, padding: '0.45rem 0.65rem', fontSize: '0.82rem', color: 'var(--c-text)', outline: 'none', colorScheme: 'dark' }}
                 />
               </div>
               <div>
-                <label style={{ fontSize: '0.68rem', color: 'var(--c-text3)', display: 'block', marginBottom: '0.3rem' }}>Durée de l'enchère (min)</label>
+                <label style={{ fontSize: '0.68rem', color: 'var(--c-text3)', display: 'block', marginBottom: '0.3rem' }}>Durée (min)</label>
                 <input type="number" min={1} placeholder="5" value={newAuction.durationMin}
-                  onChange={(e) => setNewAuction((p) => ({ ...p, durationMin: e.target.value }))}
+                  onChange={e => setNewAuction(p => ({ ...p, durationMin: e.target.value }))}
                   style={{ width: '100%', boxSizing: 'border-box', background: 'var(--c-bg)', border: '1px solid var(--c-border)', borderRadius: 6, padding: '0.45rem 0.65rem', fontSize: '0.82rem', color: 'var(--c-text)', outline: 'none' }}
                 />
               </div>
               <div>
                 <label style={{ fontSize: '0.68rem', color: 'var(--c-text3)', display: 'block', marginBottom: '0.3rem' }}>Prix de départ (€)</label>
                 <input type="number" min={1} placeholder="50" value={newAuction.startBid}
-                  onChange={(e) => setNewAuction((p) => ({ ...p, startBid: e.target.value }))}
+                  onChange={e => setNewAuction(p => ({ ...p, startBid: e.target.value }))}
                   style={{ width: '100%', boxSizing: 'border-box', background: 'var(--c-bg)', border: '1px solid var(--c-border)', borderRadius: 6, padding: '0.45rem 0.65rem', fontSize: '0.82rem', color: 'var(--c-text)', outline: 'none' }}
                 />
               </div>
@@ -321,7 +235,7 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* ── Stats rapides ── */}
+        {/* ── Stats ── */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.875rem', marginBottom: '1.75rem' }}>
           {[
             { label: 'Enchères actives', value: active.length,   color: 'var(--c-pri)' },
@@ -338,7 +252,7 @@ export default function DashboardPage() {
 
         {/* ── Loading / Error ── */}
         {loading && (
-          <div style={{ textAlign: 'center', color: 'var(--c-text3)', padding: '3rem', fontSize: '0.85rem' }}>Chargement des enchères…</div>
+          <div style={{ textAlign: 'center', color: 'var(--c-text3)', padding: '3rem', fontSize: '0.85rem' }}>Chargement…</div>
         )}
         {error && (
           <div style={{ background: 'rgba(255,77,77,.1)', border: '1px solid rgba(255,77,77,.25)', borderRadius: 8, padding: '1rem', fontSize: '0.82rem', color: 'var(--c-danger)', marginBottom: '1rem' }}>⚠ {error}</div>
@@ -352,17 +266,18 @@ export default function DashboardPage() {
               En cours
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
-              {active.map((a) => {
+              {active.map(a => {
                 const cfg = STATUS_CONFIG[a.status];
+                const isLeading = a.status === 'leading';
                 return (
                   <div key={a.id} style={{ background: 'var(--c-surf)', border: `1px solid ${cfg.border}`, borderRadius: 10, padding: '1rem 1.25rem', display: 'grid', gridTemplateColumns: '1fr auto auto auto', alignItems: 'center', gap: '1.5rem' }}>
                     <div>
-                      <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--c-text)', marginBottom: '0.2rem' }}>{`Enchère #${a.id}`}</div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--c-text3)' }}>Créneau {a.slot}</div>
+                      <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--c-text)', marginBottom: '0.2rem' }}>Enchère #{a.id}</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--c-text3)' }}>Livraison {a.slot}</div>
                     </div>
                     <div style={{ textAlign: 'center' }}>
                       <div style={{ fontSize: '0.62rem', color: 'var(--c-text3)', marginBottom: '0.15rem' }}>Temps restant</div>
-                      {a.endTime ? <Timer endTime={a.endTime} /> : <span style={{ color: 'var(--c-text3)' }}>—</span>}
+                      {a.auctionEnd ? <Timer endTime={a.auctionEnd} /> : <span style={{ color: 'var(--c-text3)' }}>—</span>}
                     </div>
                     <div style={{ textAlign: 'center' }}>
                       <div style={{ fontSize: '0.62rem', color: 'var(--c-text3)', marginBottom: '0.15rem' }}>Mise actuelle</div>
@@ -372,26 +287,27 @@ export default function DashboardPage() {
                       <span style={{ alignSelf: 'flex-end', fontSize: '0.65rem', fontWeight: 700, padding: '0.2rem 0.6rem', borderRadius: 20, background: cfg.bg, border: `1px solid ${cfg.border}`, color: cfg.color }}>
                         {cfg.label}
                       </span>
-                      {a.status !== 'won' && (
-                        <div onFocus={onFormFocus} onBlur={onFormBlur} style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
-                          <div style={{ display: 'flex', gap: '0.4rem' }}>
-                            <input type="number" min={a.currentBid + 1} placeholder={`> ${a.currentBid} €`}
-                              disabled={a.status === 'leading'}
-                              value={bidInputs[a.id] || ''}
-                              onChange={(e) => setBidInputs((p) => ({ ...p, [a.id]: e.target.value }))}
-                              style={{ flex: 1, minWidth: 0, background: 'var(--c-bg)', border: '1px solid var(--c-border)', borderRadius: 6, padding: '0.35rem 0.5rem', fontSize: '0.78rem', color: a.status === 'leading' ? 'var(--c-text3)' : 'var(--c-text)', outline: 'none', opacity: a.status === 'leading' ? 0.5 : 1 }}
-                            />
-                            <button
-                              onClick={() => void placeBid(a)}
-                              disabled={a.status === 'leading'}
-                              style={{ padding: '0.35rem 0.75rem', background: a.status === 'leading' ? 'var(--c-border)' : 'var(--c-pri)', border: 'none', borderRadius: 6, color: a.status === 'leading' ? 'var(--c-text3)' : '#fff', fontWeight: 700, fontSize: '0.75rem', cursor: a.status === 'leading' ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap' }}
-                            >
-                              Enchérir
-                            </button>
-                          </div>
-                          {bidErrors[a.id] && <div style={{ fontSize: '0.68rem', color: 'var(--c-danger)' }}>{bidErrors[a.id]}</div>}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                        <div style={{ display: 'flex', gap: '0.4rem' }}>
+                          <input
+                            type="number"
+                            min={a.currentBid + 1}
+                            placeholder={`> ${a.currentBid} €`}
+                            disabled={isLeading}
+                            value={bidInputs[a.id] || ''}
+                            onChange={e => setBidInputs(p => ({ ...p, [a.id]: e.target.value }))}
+                            style={{ flex: 1, minWidth: 0, background: 'var(--c-bg)', border: '1px solid var(--c-border)', borderRadius: 6, padding: '0.35rem 0.5rem', fontSize: '0.78rem', color: isLeading ? 'var(--c-text3)' : 'var(--c-text)', outline: 'none', opacity: isLeading ? 0.5 : 1 }}
+                          />
+                          <button
+                            onClick={() => void placeBid(a.id, a.currentBid)}
+                            disabled={isLeading}
+                            style={{ padding: '0.35rem 0.75rem', background: isLeading ? 'var(--c-border)' : 'var(--c-pri)', border: 'none', borderRadius: 6, color: isLeading ? 'var(--c-text3)' : '#fff', fontWeight: 700, fontSize: '0.75rem', cursor: isLeading ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap' }}
+                          >
+                            Enchérir
+                          </button>
                         </div>
-                      )}
+                        {bidErrors[a.id] && <div style={{ fontSize: '0.68rem', color: 'var(--c-danger)' }}>{bidErrors[a.id]}</div>}
+                      </div>
                     </div>
                   </div>
                 );
@@ -402,24 +318,25 @@ export default function DashboardPage() {
 
         {!loading && active.length === 0 && !error && (
           <div style={{ textAlign: 'center', color: 'var(--c-text3)', padding: '3rem', fontSize: '0.85rem', background: 'var(--c-surf)', border: '1px solid var(--c-border)', borderRadius: 12 }}>
-            Aucune enchère en cours pour le moment.
+            Aucune enchère en cours.
           </div>
         )}
 
-        {/* ── Enchères à venir ── */}
+        {/* ── À venir ── */}
         {!loading && upcoming.length > 0 && (
           <div style={{ marginTop: '1.25rem' }}>
             <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--c-text2)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.875rem' }}>
               À venir
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              {upcoming.map((a) => (
-                <div key={a.id} style={{ background: 'var(--c-surf)', border: '1px solid var(--c-border)', borderRadius: 10, padding: '0.875rem 1.25rem', display: 'grid', gridTemplateColumns: '1fr auto auto', alignItems: 'center', gap: '1.5rem', opacity: 0.65 }}>
+              {upcoming.map(a => (
+                <div key={a.id} style={{ background: 'var(--c-surf)', border: '1px solid var(--c-border)', borderRadius: 10, padding: '0.875rem 1.25rem', display: 'grid', gridTemplateColumns: '1fr auto auto auto', alignItems: 'center', gap: '1.5rem', opacity: 0.7 }}>
                   <div>
-                    <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--c-text)', marginBottom: '0.15rem' }}>{`Enchère #${a.id}`}</div>
-                    <div style={{ fontSize: '0.72rem', color: 'var(--c-text3)' }}>Début {a.slot}</div>
+                    <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--c-text)', marginBottom: '0.15rem' }}>Enchère #{a.id}</div>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--c-text3)' }}>Livraison {a.slot}</div>
                   </div>
-                  <div style={{ fontWeight: 700, fontSize: '0.88rem', color: 'var(--c-text3)' }}>€ {a.currentBid}</div>
+                  <div><CountDown startTime={a.auctionStart} /></div>
+                  <div style={{ fontWeight: 700, fontSize: '0.88rem', color: 'var(--c-text3)' }}>À partir de € {a.startPrice}</div>
                   <span style={{ fontSize: '0.65rem', fontWeight: 700, padding: '0.2rem 0.75rem', borderRadius: 20, background: STATUS_CONFIG.pending.bg, border: `1px solid ${STATUS_CONFIG.pending.border}`, color: STATUS_CONFIG.pending.color }}>
                     {STATUS_CONFIG.pending.label}
                   </span>
@@ -429,20 +346,20 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* ── Enchères terminées ── */}
+        {/* ── Terminées ── */}
         {!loading && closed.length > 0 && (
           <div style={{ marginTop: '1.25rem' }}>
             <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--c-text2)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.875rem' }}>
               Terminées
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              {closed.map((a) => {
+              {closed.map(a => {
                 const cfg = STATUS_CONFIG[a.status];
                 return (
                   <div key={a.id} style={{ background: 'var(--c-surf)', border: '1px solid var(--c-border)', borderRadius: 10, padding: '0.875rem 1.25rem', display: 'grid', gridTemplateColumns: '1fr auto auto auto', alignItems: 'center', gap: '1.5rem', opacity: 0.7 }}>
                     <div>
-                      <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--c-text)', marginBottom: '0.15rem' }}>{`Enchère #${a.id}`}</div>
-                      <div style={{ fontSize: '0.72rem', color: 'var(--c-text3)' }}>Créneau {a.slot}</div>
+                      <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--c-text)', marginBottom: '0.15rem' }}>Enchère #{a.id}</div>
+                      <div style={{ fontSize: '0.72rem', color: 'var(--c-text3)' }}>Livraison {a.slot}</div>
                     </div>
                     <div style={{ fontSize: '0.72rem', color: 'var(--c-text3)' }}>Terminé</div>
                     <div style={{ fontWeight: 800, fontSize: '1rem', color: cfg.color }}>€ {a.currentBid}</div>

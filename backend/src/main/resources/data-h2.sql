@@ -14,17 +14,17 @@ VALUES
 
 INSERT INTO delivery_slots (id, start_time, end_time, capacity, status)
 VALUES
-(1, NOW() + INTERVAL '2 hours',  NOW() + INTERVAL '4 hours',  10, 'OPEN'),
-(2, NOW() + INTERVAL '5 hours',  NOW() + INTERVAL '7 hours',  10, 'OPEN'),
-(3, NOW() + INTERVAL '8 hours',  NOW() + INTERVAL '10 hours', 10, 'OPEN');
+(1, DATEADD('HOUR', 2,  NOW()), DATEADD('HOUR', 4,  NOW()), 10, 'OPEN'),
+(2, DATEADD('HOUR', 5,  NOW()), DATEADD('HOUR', 7,  NOW()), 10, 'OPEN'),
+(3, DATEADD('HOUR', 8,  NOW()), DATEADD('HOUR', 10, NOW()), 10, 'OPEN');
 
-SELECT setval(pg_get_serial_sequence('delivery_slots', 'id'), 4, false);
+ALTER TABLE delivery_slots ALTER COLUMN id RESTART WITH 4;
 
 
 INSERT INTO auctions (start_price, start_time, end_time, status, delivery_slot_id)
 VALUES
-(10.0, NOW() - INTERVAL '30 minutes', NOW() + INTERVAL '30 minutes', 'OPEN',    1),
-(20.0, NOW() - INTERVAL '10 minutes', NOW() + INTERVAL '50 minutes', 'OPEN',    2),
-(15.0, NOW() - INTERVAL '60 minutes', NOW() - INTERVAL '5 minutes',  'CLOSED',  3),
-(50.0, NOW() + INTERVAL '10 minutes', NOW() + INTERVAL '70 minutes', 'PENDING', 1),
-(5.0,  NOW() + INTERVAL '20 minutes', NOW() + INTERVAL '80 minutes', 'PENDING', 2);
+(10.0, DATEADD('MINUTE', -30, NOW()), DATEADD('MINUTE', 30,  NOW()), 'OPEN',    1),
+(20.0, DATEADD('MINUTE', -10, NOW()), DATEADD('MINUTE', 50,  NOW()), 'OPEN',    2),
+(15.0, DATEADD('MINUTE', -60, NOW()), DATEADD('MINUTE', -5,  NOW()), 'CLOSED',  3),
+(50.0, DATEADD('MINUTE',  10, NOW()), DATEADD('MINUTE', 70,  NOW()), 'PENDING', 1),
+(5.0,  DATEADD('MINUTE',  20, NOW()), DATEADD('MINUTE', 80,  NOW()), 'PENDING', 2);

@@ -12,12 +12,14 @@ import com.delivery.store.repository.StoreRepository;
 import com.delivery.auction.entity.Auction;
 import com.delivery.auction.entity.AuctionStatus;
 import com.delivery.auction.repository.AuctionRepository;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -29,13 +31,16 @@ public class BidService {
     private final StoreRepository storeRepository;
     private final AuctionRepository auctionRepository;
     private final BidMapper mapper;
+    private final SimpMessagingTemplate messagingTemplate;
 
     public BidService(BidRepository repository, StoreRepository storeRepository,
-            AuctionRepository auctionRepository, BidMapper mapper) {
+            AuctionRepository auctionRepository, BidMapper mapper,
+            SimpMessagingTemplate messagingTemplate) {
         this.repository = repository;
         this.storeRepository = storeRepository;
         this.auctionRepository = auctionRepository;
         this.mapper = mapper;
+        this.messagingTemplate = messagingTemplate;
     }
 
     public BidDto createBid(BidDto dto) {
@@ -45,7 +50,6 @@ public class BidService {
 
         Auction auction = auctionRepository.findById(dto.getAuctionId())
                 .orElseThrow(() -> new ResourceNotFoundException("Auction not found: " + dto.getAuctionId()));
-
 
         if (auction.getStatus() != AuctionStatus.OPEN) {
             throw new IllegalStateException("Auction is not open");
@@ -64,27 +68,19 @@ public class BidService {
             );
         }
 
-
         Optional<Bid> highestOpt = repository.findTopByAuctionIdOrderByAmountDesc(dto.getAuctionId());
-
         BigDecimal startPrice = BigDecimal.valueOf(auction.getStartPrice());
 
-        // CAS 1 : aucun bid encore
         if (highestOpt.isEmpty()) {
-
             if (bidAmount.compareTo(startPrice) < 0) {
-                throw new IllegalStateException(
-                        "Bid must be at least starting price: " + startPrice);
+                throw new IllegalStateException("Bid must be at least starting price: " + startPrice);
             }
-
         } else {
-
             Bid highest = highestOpt.get();
             BigDecimal highestAmount = BigDecimal.valueOf(highest.getAmount());
 
             if (bidAmount.compareTo(highestAmount) <= 0) {
-                throw new IllegalStateException(
-                        "Bid must be higher than current highest bid: " + highestAmount);
+                throw new IllegalStateException("Bid must be higher than current highest bid: " + highestAmount);
             }
 
             if (highest.getStore().getId().equals(store.getId())) {
@@ -92,23 +88,17 @@ public class BidService {
             }
 
             Store oldStore = highest.getStore();
-            BigDecimal oldAmount = highestAmount;
-
-            oldStore.setBalance(oldStore.getBalance().add(oldAmount));
-            oldStore.setReservedBalance(oldStore.getReservedBalance().subtract(oldAmount));
-
+            oldStore.setBalance(oldStore.getBalance().add(highestAmount));
+            oldStore.setReservedBalance(oldStore.getReservedBalance().subtract(highestAmount));
             storeRepository.save(oldStore);
 
             highest.setStatus(BidStatus.OUTBID);
             repository.save(highest);
         }
 
-
         store.setBalance(store.getBalance().subtract(bidAmount));
         store.setReservedBalance(store.getReservedBalance().add(bidAmount));
-
         storeRepository.save(store);
-
 
         Bid bid = mapper.toEntity(dto);
         bid.setStore(store);
@@ -117,8 +107,27 @@ public class BidService {
         bid.setStatus(BidStatus.WON);
 
         Bid saved = repository.save(bid);
+        BidDto savedDto = mapper.toDto(saved);
 
-        return mapper.toDto(saved);
+        // Broadcast new bid to all dashboard watchers
+        messagingTemplate.convertAndSend("/topic/bids", savedDto);
+
+        // Notify new leading bidder of their updated balance
+        messagingTemplate.convertAndSend(
+            "/queue/store/" + store.getId() + "/balance",
+            Map.of("balance", store.getBalance(), "reservedBalance", store.getReservedBalance())
+        );
+
+        // Notify outbid store of their refund
+        highestOpt.ifPresent(outbidBid -> {
+            Store outbidStore = outbidBid.getStore();
+            messagingTemplate.convertAndSend(
+                "/queue/store/" + outbidStore.getId() + "/balance",
+                Map.of("balance", outbidStore.getBalance(), "reservedBalance", outbidStore.getReservedBalance())
+            );
+        });
+
+        return savedDto;
     }
 
     public BidDto getBid(Long id) {
@@ -135,7 +144,6 @@ public class BidService {
         if (!auctionRepository.existsById(auctionId)) {
             throw new ResourceNotFoundException("Auction not found: " + auctionId);
         }
-
         List<Bid> bids = repository.findBidsByAuctionIdOrderByAmountDesc(auctionId);
         return mapper.toDtoList(bids);
     }
@@ -143,7 +151,6 @@ public class BidService {
     public List<BidDto> getBidsByStore(Long storeId) {
         Store store = storeRepository.findById(storeId)
                 .orElseThrow(() -> new ResourceNotFoundException("Store not found: " + storeId));
-
         List<Bid> bids = repository.findByStore(store);
         return mapper.toDtoList(bids);
     }
@@ -152,7 +159,6 @@ public class BidService {
         if (!auctionRepository.existsById(auctionId)) {
             throw new ResourceNotFoundException("Auction not found: " + auctionId);
         }
-
         return repository.findTopByAuctionIdOrderByAmountDesc(auctionId)
                 .map(mapper::toDto);
     }
@@ -161,7 +167,6 @@ public class BidService {
         if (!auctionRepository.existsById(auctionId)) {
             throw new ResourceNotFoundException("Auction not found: " + auctionId);
         }
-
         List<Bid> bids = repository.findLeaderboardByAuctionId(auctionId);
         return mapper.toDtoList(bids);
     }

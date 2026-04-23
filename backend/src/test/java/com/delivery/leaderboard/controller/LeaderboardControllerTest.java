@@ -2,8 +2,10 @@ package com.delivery.leaderboard.controller;
 
 import com.delivery.store.dto.StoreDto;
 import com.delivery.store.service.StoreService;
+import com.delivery.auth.JwtUtil;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
@@ -17,10 +19,14 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(controllers = LeaderboardController.class)
+@AutoConfigureMockMvc(addFilters = false)
 public class LeaderboardControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @MockBean
+    private JwtUtil jwtUtil;
 
     @MockBean
     private StoreService storeService;

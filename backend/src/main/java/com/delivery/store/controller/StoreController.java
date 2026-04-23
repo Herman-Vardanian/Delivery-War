@@ -1,5 +1,7 @@
 package com.delivery.store.controller;
 
+import com.delivery.auth.AuthResponse;
+import com.delivery.auth.JwtUtil;
 import com.delivery.bid.dto.BidDto;
 import com.delivery.bid.service.BidService;
 import com.delivery.store.dto.StoreDto;
@@ -10,17 +12,18 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/api/stores")
 public class StoreController {
 
     private final StoreService storeService;
     private final BidService bidService;
+    private final JwtUtil jwtUtil;
 
-    public StoreController(StoreService storeService, BidService bidService) {
+    public StoreController(StoreService storeService, BidService bidService, JwtUtil jwtUtil) {
         this.storeService = storeService;
         this.bidService = bidService;
+        this.jwtUtil = jwtUtil;
     }
 
     @PostMapping
@@ -30,8 +33,10 @@ public class StoreController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<StoreDto> login(@RequestBody StoreDto dto) {
-        return ResponseEntity.ok(storeService.login(dto.getName(), dto.getPassword()));
+    public ResponseEntity<AuthResponse> login(@RequestBody StoreDto dto) {
+        StoreDto store = storeService.login(dto.getName(), dto.getPassword());
+        String token = jwtUtil.generate(String.valueOf(store.getId()));
+        return ResponseEntity.ok(new AuthResponse(token, store));
     }
 
     @GetMapping("/{id}")

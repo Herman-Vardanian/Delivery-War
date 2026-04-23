@@ -1,5 +1,6 @@
 package com.delivery.store.controller;
 
+import com.delivery.auth.JwtUtil;
 import com.delivery.common.exception.GlobalExceptionHandler;
 import com.delivery.common.exception.ResourceNotFoundException;
 import com.delivery.store.dto.StoreDto;
@@ -40,6 +41,9 @@ public class StoreControllerTest {
 
     @MockBean
     private BidService bidService;
+
+    @MockBean
+    private JwtUtil jwtUtil;
 
     @Test
     void createStore_returnsOk() throws Exception {

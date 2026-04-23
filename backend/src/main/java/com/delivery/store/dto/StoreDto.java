@@ -1,5 +1,6 @@
 package com.delivery.store.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -11,6 +12,7 @@ import java.math.BigDecimal;
 public class StoreDto {
     private Long id;
     private String name;
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
     private String role;
     private String email;

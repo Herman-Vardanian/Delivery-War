@@ -1,0 +1,29 @@
+stages:
+  - test
+  - build
+
+backend-tests:
+  stage: test
+  image: maven:3.9.6-eclipse-temurin-17
+  variables:
+    MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/backend/.m2/repository"
+  script:
+    - cd backend && mvn test -Dspring.profiles.active=dev --batch-mode --no-transfer-progress
+  cache:
+    key: maven-$CI_COMMIT_REF_SLUG
+    paths:
+      - backend/.m2/repository
+
+frontend-build:
+  stage: build
+  image: node:20-alpine
+  script:
+    - cd frontend && npm ci && npm run build
+  cache:
+    key: npm-$CI_COMMIT_REF_SLUG
+    paths:
+      - frontend/node_modules
+  artifacts:
+    paths:
+      - frontend/dist
+    expire_in: 1 week
