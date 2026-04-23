@@ -32,8 +32,8 @@ export default function AppNavbar() {
       borderBottom: '1px solid var(--c-border)',
       padding: '0 2rem',
     }}>
-      <Link to="/" style={{ textDecoration: 'none', fontWeight: 800, fontSize: '1rem', letterSpacing: '0.06em', color: 'var(--c-text)', marginRight: '2rem', flexShrink: 0 }}>
-        Delivery <span style={{ color: 'var(--c-pri)' }}>War</span>
+      <Link to="/" style={{ fontFamily: 'var(--font-d)', fontSize: '1.4rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.03em', textDecoration: 'none', color: '#fff', marginRight: '2rem', flexShrink: 0 }}>
+        Delivery<span style={{ color: 'var(--c-pri)' }}>War</span>
       </Link>
 
       <div style={{ flex: 1 }} />

@@ -83,9 +83,9 @@ export default function AppRouter() {
         <Route
           path="/leaderboard"
           element={
-            <PublicLayout>
+            <AppLayout>
               <LeaderboardPage />
-            </PublicLayout>
+            </AppLayout>
           }
         />
         <Route path="*" element={<Navigate to="/" replace />} />
