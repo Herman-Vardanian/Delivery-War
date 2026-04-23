@@ -26,7 +26,13 @@ public class StoreService {
 
     public StoreDto createStore(StoreDto dto) {
         Store s = mapper.toEntity(dto);
-        // Forcer les valeurs par défaut à la création
+        // Valider et forcer les valeurs par défaut à la création
+        if (s.getName() == null || s.getName().isBlank()) {
+            throw new IllegalArgumentException("Le champ 'name' est requis.");
+        }
+        if (repository.findByName(s.getName()).isPresent()) {
+            throw new IllegalArgumentException("Un store existe déjà avec ce nom.");
+        }
         s.setRole(com.delivery.store.entity.Role.STORE);
         s.setBalance(BigDecimal.ZERO);
         s.setReservedBalance(BigDecimal.ZERO);
@@ -44,7 +50,7 @@ public class StoreService {
                 .orElseThrow(() -> new ResourceNotFoundException("Store not found: " + id));
     }
 
-    public List<StoreDto> getStoreLeaderboard(){
+    public List<StoreDto> getStoreLeaderboard() {
         List<Store> topStores = repository.findTop5ByOrderByTotalSpentDesc();
         return topStores.stream()
                 .map(mapper::toDto)
