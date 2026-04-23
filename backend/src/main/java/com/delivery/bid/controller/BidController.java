@@ -34,11 +34,4 @@ public class BidController {
     public ResponseEntity<List<BidDto>> listBids() {
         return ResponseEntity.ok(bidService.listBids());
     }
-
-    @GetMapping("/store/{storeId}")
-    public ResponseEntity<List<BidDto>> getBidsByStore(@PathVariable Long storeId) {
-        List<BidDto> bids = bidService.getBidsByStore(storeId);
-        return ResponseEntity.ok(bids);
-    }
-
 }
