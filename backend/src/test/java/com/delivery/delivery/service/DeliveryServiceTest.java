@@ -46,8 +46,14 @@ public class DeliveryServiceTest {
 
     @Test
     void createDelivery_setsDefaultsAndSaves() {
-        Store store = Store.builder().id(1L).name("TestStore").build();
-        DeliverySlot deliverySlot = DeliverySlot.builder().id(DeliverySlotId.builder().val("1").build()).build();
+        Store store = Store.builder()
+                .id(1L)
+                .name("TestStore")
+                .build();
+
+        DeliverySlot deliverySlot = DeliverySlot.builder()
+                .id(1L)
+                .build();
 
         DeliveryDto dto = DeliveryDto.builder()
                 .address("123 Test St")
@@ -76,6 +82,7 @@ public class DeliveryServiceTest {
         assertEquals("123 Test St", result.getAddress());
         assertEquals("PENDING", result.getStatus());
         assertEquals("UPS", result.getDeliveryCompany());
+
         verify(repository).save(any(Delivery.class));
     }
 
@@ -90,12 +97,17 @@ public class DeliveryServiceTest {
 
         when(storeRepository.findById(1L)).thenReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class, () -> service.createDelivery(dto));
+        assertThrows(ResourceNotFoundException.class,
+                () -> service.createDelivery(dto));
     }
 
     @Test
     void createDelivery_deliverySlotNotFound_throws() {
-        Store store = Store.builder().id(1L).name("TestStore").build();
+        Store store = Store.builder()
+                .id(1L)
+                .name("TestStore")
+                .build();
+
         DeliveryDto dto = DeliveryDto.builder()
                 .address("123 Test St")
                 .deliveryCompany("UPS")
@@ -106,7 +118,8 @@ public class DeliveryServiceTest {
         when(storeRepository.findById(1L)).thenReturn(Optional.of(store));
         when(deliverySlotRepository.findById(1L)).thenReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class, () -> service.createDelivery(dto));
+        assertThrows(ResourceNotFoundException.class,
+                () -> service.createDelivery(dto));
     }
 
     @Test
@@ -116,9 +129,11 @@ public class DeliveryServiceTest {
                 .address("456 Delivery Ave")
                 .status(DeliveryStatus.IN_PROGRESS)
                 .build();
+
         when(repository.findById(2L)).thenReturn(Optional.of(delivery));
 
         DeliveryDto dto = service.getDelivery(2L);
+
         assertNotNull(dto);
         assertEquals(2L, dto.getId());
         assertEquals("456 Delivery Ave", dto.getAddress());
@@ -128,54 +143,86 @@ public class DeliveryServiceTest {
     @Test
     void getDelivery_notFound() {
         when(repository.findById(100L)).thenReturn(Optional.empty());
-        assertThrows(ResourceNotFoundException.class, () -> service.getDelivery(100L));
+
+        assertThrows(ResourceNotFoundException.class,
+                () -> service.getDelivery(100L));
     }
 
     @Test
     void listDeliveries_returnsAll() {
         Delivery a = Delivery.builder().id(1L).address("Address A").build();
         Delivery b = Delivery.builder().id(2L).address("Address B").build();
+
         when(repository.findAll()).thenReturn(Arrays.asList(a, b));
 
         var list = service.listDeliveries();
+
         assertEquals(2, list.size());
     }
 
     @Test
     void getDeliveriesByStore_returnsList() {
         Store store = Store.builder().id(1L).build();
-        Delivery a = Delivery.builder().id(1L).address("Address A").store(store).build();
-        Delivery b = Delivery.builder().id(2L).address("Address B").store(store).build();
+
+        Delivery a = Delivery.builder()
+                .id(1L)
+                .address("Address A")
+                .store(store)
+                .build();
+
+        Delivery b = Delivery.builder()
+                .id(2L)
+                .address("Address B")
+                .store(store)
+                .build();
 
         when(storeRepository.findById(1L)).thenReturn(Optional.of(store));
         when(repository.findByStore(store)).thenReturn(Arrays.asList(a, b));
 
         var list = service.getDeliveriesByStore(1L);
+
         assertEquals(2, list.size());
     }
 
     @Test
     void getDeliveriesByDeliverySlot_returnsList() {
-        DeliverySlot deliverySlot = DeliverySlot.builder().id(DeliverySlotId.builder().val("1").build()).build();
-        Delivery a = Delivery.builder().id(1L).address("Address A").deliverySlot(deliverySlot).build();
-        Delivery b = Delivery.builder().id(2L).address("Address B").deliverySlot(deliverySlot).build();
+        DeliverySlot deliverySlot = DeliverySlot.builder()
+                .id(1L)
+                .build();
+
+        Delivery a = Delivery.builder()
+                .id(1L)
+                .address("Address A")
+                .deliverySlot(deliverySlot)
+                .build();
+
+        Delivery b = Delivery.builder()
+                .id(2L)
+                .address("Address B")
+                .deliverySlot(deliverySlot)
+                .build();
 
         when(deliverySlotRepository.findById(1L)).thenReturn(Optional.of(deliverySlot));
         when(repository.findByDeliverySlot(deliverySlot)).thenReturn(Arrays.asList(a, b));
 
         var list = service.getDeliveriesByDeliverySlot(1L);
+
         assertEquals(2, list.size());
     }
 
     @Test
     void getDeliveriesByStore_storeNotFound_throws() {
         when(storeRepository.findById(1L)).thenReturn(Optional.empty());
-        assertThrows(ResourceNotFoundException.class, () -> service.getDeliveriesByStore(1L));
+
+        assertThrows(ResourceNotFoundException.class,
+                () -> service.getDeliveriesByStore(1L));
     }
 
     @Test
     void getDeliveriesByDeliverySlot_deliverySlotNotFound_throws() {
         when(deliverySlotRepository.findById(1L)).thenReturn(Optional.empty());
-        assertThrows(ResourceNotFoundException.class, () -> service.getDeliveriesByDeliverySlot(1L));
+
+        assertThrows(ResourceNotFoundException.class,
+                () -> service.getDeliveriesByDeliverySlot(1L));
     }
 }

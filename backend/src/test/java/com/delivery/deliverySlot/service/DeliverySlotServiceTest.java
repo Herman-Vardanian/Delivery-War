@@ -2,7 +2,6 @@ package com.delivery.deliverySlot.service;
 
 import com.delivery.deliverySlot.dto.DeliverySlotDto;
 import com.delivery.deliverySlot.entity.DeliverySlot;
-import com.delivery.deliverySlot.entity.DeliverySlotId;
 import com.delivery.deliverySlot.entity.DeliverySlotStatus;
 import com.delivery.deliverySlot.mapper.DeliverySlotMapper;
 import com.delivery.deliverySlot.repository.DeliverySlotRepository;
@@ -39,12 +38,10 @@ public class DeliverySlotServiceTest {
         service = new DeliverySlotService(repository, mapper);
     }
 
-    // ----------------------------------------------------------------- findAll
-
     @Test
     void findAll_returnsAllSlots() {
         DeliverySlot slot1 = DeliverySlot.builder()
-                .id(DeliverySlotId.builder().val("1").build())
+                .id(1L)
                 .startTime(START)
                 .endTime(END)
                 .capacity(10)
@@ -52,7 +49,7 @@ public class DeliverySlotServiceTest {
                 .build();
 
         DeliverySlot slot2 = DeliverySlot.builder()
-                .id(DeliverySlotId.builder().val("2").build())
+                .id(2L)
                 .startTime(START)
                 .endTime(END)
                 .capacity(5)
@@ -80,12 +77,10 @@ public class DeliverySlotServiceTest {
         assertTrue(result.isEmpty());
     }
 
-    // ----------------------------------------------------------------- findById
-
     @Test
     void findById_found_returnsDto() {
         DeliverySlot slot = DeliverySlot.builder()
-                .id(DeliverySlotId.builder().val("1").build())
+                .id(1L)
                 .startTime(START)
                 .endTime(END)
                 .capacity(10)
@@ -113,8 +108,6 @@ public class DeliverySlotServiceTest {
         assertNull(result);
     }
 
-    // ------------------------------------------------------------------ save
-
     @Test
     void save_persistsAndReturnsDto() {
         DeliverySlotDto inputDto = DeliverySlotDto.builder()
@@ -126,7 +119,7 @@ public class DeliverySlotServiceTest {
                 .build();
 
         DeliverySlot savedEntity = DeliverySlot.builder()
-                .id(DeliverySlotId.builder().val("1").build())
+                .id(1L)
                 .startTime(START)
                 .endTime(END)
                 .capacity(8)
@@ -155,7 +148,7 @@ public class DeliverySlotServiceTest {
                 .build();
 
         DeliverySlot savedEntity = DeliverySlot.builder()
-                .id(DeliverySlotId.builder().val("2").build())
+                .id(2L)
                 .startTime(START)
                 .endTime(END)
                 .capacity(3)
@@ -168,8 +161,6 @@ public class DeliverySlotServiceTest {
 
         assertEquals(DeliverySlotStatus.PENDING, result.getStatus());
     }
-
-    // ---------------------------------------------------------------- deleteById
 
     @Test
     void deleteById_callsRepository() {

@@ -30,8 +30,7 @@ public class DeliveryMapper {
         }
 
         if (delivery.getDeliverySlot() != null) {
-            dto.setDeliverySlotId(Long.valueOf(delivery.getDeliverySlot().getId().getVal()));
-        }
+            dto.setDeliverySlotId(delivery.getDeliverySlot().getId());        }
 
         return dto;
     }
