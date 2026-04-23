@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import AuthBg from '../components/AuthBg';
+import { authModel } from '../../models/authModel';
 
 function PwdStrength({ value }) {
   let score = 0;
@@ -29,9 +30,11 @@ export default function RegisterPage() {
   const navigate = useNavigate();
   const [form, setForm] = useState({ storeId: '', password: '', confirm: '', email: '', address: '' });
   const [errors, setErrors] = useState({});
+  const [apiError, setApiError] = useState('');
+  const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const next = {};
 
@@ -47,10 +50,20 @@ export default function RegisterPage() {
     if (form.password && form.password !== form.confirm)
       next.confirm = 'Ne correspond pas';
 
-setErrors(next);
+    setErrors(next);
     if (Object.keys(next).length > 0) return;
 
-    setSuccess(true);
+    setLoading(true);
+    setApiError('');
+    try {
+      const store = await authModel.register(form);
+      authModel.saveUser(store);
+      setSuccess(true);
+    } catch (err) {
+      setApiError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -231,8 +244,14 @@ setErrors(next);
               </div>
             </div>
 
-            <button className="btn-cta" type="submit">
-              Créer mon compte
+            {apiError && (
+              <div style={{ background: 'rgba(255,77,77,.1)', border: '1px solid rgba(255,77,77,.25)', borderRadius: 4, padding: '0.6rem 0.875rem', fontSize: '0.75rem', color: 'var(--c-danger)', marginBottom: '0.5rem' }}>
+                ⚠ {apiError}
+              </div>
+            )}
+
+            <button className="btn-cta" type="submit" disabled={loading}>
+              {loading ? 'Création…' : 'Créer mon compte'}
               <span className="btn-arrow">→</span>
             </button>
           </form>
