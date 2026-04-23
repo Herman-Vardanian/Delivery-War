@@ -2,6 +2,7 @@ package com.delivery.auction.service;
 
 import com.delivery.auction.dto.AuctionDto;
 import com.delivery.auction.entity.Auction;
+import com.delivery.auction.entity.AuctionStatus;
 import com.delivery.auction.mapper.AuctionMapper;
 import com.delivery.auction.repository.AuctionRepository;
 import com.delivery.common.exception.ResourceNotFoundException;
@@ -26,6 +27,9 @@ public class AuctionService {
     public AuctionDto createAuction(AuctionDto dto) {
         Auction auction = mapper.toEntity(dto);
         auction.setId(null);
+        if (auction.getStatus() == null) {
+            auction.setStatus(AuctionStatus.OPEN);
+        }
         Auction saved = repository.save(auction);
         return mapper.toDto(saved);
     }
