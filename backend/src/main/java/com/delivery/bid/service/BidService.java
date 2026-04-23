@@ -1,5 +1,6 @@
 package com.delivery.bid.service;
 
+import com.delivery.common.exception.InsufficientBalanceException;
 import com.delivery.common.exception.ResourceNotFoundException;
 import com.delivery.bid.dto.BidDto;
 import com.delivery.bid.entity.Bid;
@@ -9,10 +10,12 @@ import com.delivery.bid.repository.BidRepository;
 import com.delivery.store.entity.Store;
 import com.delivery.store.repository.StoreRepository;
 import com.delivery.auction.entity.Auction;
+import com.delivery.auction.entity.AuctionStatus;
 import com.delivery.auction.repository.AuctionRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -27,8 +30,8 @@ public class BidService {
     private final AuctionRepository auctionRepository;
     private final BidMapper mapper;
 
-    public BidService(BidRepository repository, StoreRepository storeRepository, 
-                      AuctionRepository auctionRepository, BidMapper mapper) {
+    public BidService(BidRepository repository, StoreRepository storeRepository,
+            AuctionRepository auctionRepository, BidMapper mapper) {
         this.repository = repository;
         this.storeRepository = storeRepository;
         this.auctionRepository = auctionRepository;
@@ -36,19 +39,85 @@ public class BidService {
     }
 
     public BidDto createBid(BidDto dto) {
+
         Store store = storeRepository.findById(dto.getStoreId())
                 .orElseThrow(() -> new ResourceNotFoundException("Store not found: " + dto.getStoreId()));
-        
+
         Auction auction = auctionRepository.findById(dto.getAuctionId())
                 .orElseThrow(() -> new ResourceNotFoundException("Auction not found: " + dto.getAuctionId()));
-        
+
+
+        if (auction.getStatus() != AuctionStatus.OPEN) {
+            throw new IllegalStateException("Auction is not open");
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        if (now.isBefore(auction.getStartTime()) || now.isAfter(auction.getEndTime())) {
+            throw new IllegalStateException("Auction not active");
+        }
+
+        BigDecimal bidAmount = BigDecimal.valueOf(dto.getAmount());
+
+        if (store.getBalance().compareTo(bidAmount) < 0) {
+            throw new InsufficientBalanceException(
+                "Insufficient balance: available=" + store.getBalance() + ", required=" + bidAmount
+            );
+        }
+
+
+        Optional<Bid> highestOpt = repository.findTopByAuctionIdOrderByAmountDesc(dto.getAuctionId());
+
+        BigDecimal startPrice = BigDecimal.valueOf(auction.getStartPrice());
+
+        // CAS 1 : aucun bid encore
+        if (highestOpt.isEmpty()) {
+
+            if (bidAmount.compareTo(startPrice) < 0) {
+                throw new IllegalStateException(
+                        "Bid must be at least starting price: " + startPrice);
+            }
+
+        } else {
+
+            Bid highest = highestOpt.get();
+            BigDecimal highestAmount = BigDecimal.valueOf(highest.getAmount());
+
+            if (bidAmount.compareTo(highestAmount) <= 0) {
+                throw new IllegalStateException(
+                        "Bid must be higher than current highest bid: " + highestAmount);
+            }
+
+            if (highest.getStore().getId().equals(store.getId())) {
+                throw new IllegalStateException("You already have the highest bid");
+            }
+
+            Store oldStore = highest.getStore();
+            BigDecimal oldAmount = highestAmount;
+
+            oldStore.setBalance(oldStore.getBalance().add(oldAmount));
+            oldStore.setReservedBalance(oldStore.getReservedBalance().subtract(oldAmount));
+
+            storeRepository.save(oldStore);
+
+            highest.setStatus(BidStatus.OUTBID);
+            repository.save(highest);
+        }
+
+
+        store.setBalance(store.getBalance().subtract(bidAmount));
+        store.setReservedBalance(store.getReservedBalance().add(bidAmount));
+
+        storeRepository.save(store);
+
+
         Bid bid = mapper.toEntity(dto);
         bid.setStore(store);
         bid.setAuction(auction);
         bid.setTimestamp(LocalDateTime.now());
-        bid.setStatus(BidStatus.OUTBID);
-        
+        bid.setStatus(BidStatus.WON);
+
         Bid saved = repository.save(bid);
+
         return mapper.toDto(saved);
     }
 
@@ -63,11 +132,10 @@ public class BidService {
     }
 
     public List<BidDto> getBidsByAuction(Long auctionId) {
-        // Verify auction exists first
         if (!auctionRepository.existsById(auctionId)) {
             throw new ResourceNotFoundException("Auction not found: " + auctionId);
         }
-        
+
         List<Bid> bids = repository.findBidsByAuctionIdOrderByAmountDesc(auctionId);
         return mapper.toDtoList(bids);
     }
@@ -75,31 +143,29 @@ public class BidService {
     public List<BidDto> getBidsByStore(Long storeId) {
         Store store = storeRepository.findById(storeId)
                 .orElseThrow(() -> new ResourceNotFoundException("Store not found: " + storeId));
-        
+
         List<Bid> bids = repository.findByStore(store);
         return mapper.toDtoList(bids);
     }
 
     public Optional<BidDto> getHighestBid(Long auctionId) {
-        // Verify auction exists first
         if (!auctionRepository.existsById(auctionId)) {
             throw new ResourceNotFoundException("Auction not found: " + auctionId);
         }
-        
+
         return repository.findTopByAuctionIdOrderByAmountDesc(auctionId)
                 .map(mapper::toDto);
     }
-    
+
     public List<BidDto> getLeaderboardByAuction(Long auctionId) {
-        // Verify auction exists first
         if (!auctionRepository.existsById(auctionId)) {
             throw new ResourceNotFoundException("Auction not found: " + auctionId);
         }
-        
+
         List<Bid> bids = repository.findLeaderboardByAuctionId(auctionId);
         return mapper.toDtoList(bids);
     }
-    
+
     public List<BidDto> getGlobalLeaderboard() {
         List<Bid> bids = repository.findGlobalLeaderboard();
         return mapper.toDtoList(bids);
