@@ -21,3 +21,7 @@ frontend/modele.md
 # OS
 .DS_Store
 Thumbs.db
+
+backend/.idea/
+
+frontend/.idea/

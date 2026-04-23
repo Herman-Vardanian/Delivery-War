@@ -8,8 +8,8 @@ import com.delivery.delivery.mapper.DeliveryMapper;
 import com.delivery.delivery.repository.DeliveryRepository;
 import com.delivery.store.entity.Store;
 import com.delivery.store.repository.StoreRepository;
-import com.delivery.deliveryslot.entity.DeliverySlot;
-import com.delivery.deliveryslot.repository.DeliverySlotRepository;
+import com.delivery.deliverySlot.entity.DeliverySlot;
+import com.delivery.deliverySlot.repository.DeliverySlotRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,7 +25,7 @@ public class DeliveryService {
     private final DeliverySlotRepository deliverySlotRepository;
     private final DeliveryMapper mapper;
 
-    public DeliveryService(DeliveryRepository repository, StoreRepository storeRepository, 
+    public DeliveryService(DeliveryRepository repository, StoreRepository storeRepository,
                           DeliverySlotRepository deliverySlotRepository, DeliveryMapper mapper) {
         this.repository = repository;
         this.storeRepository = storeRepository;
@@ -36,15 +36,15 @@ public class DeliveryService {
     public DeliveryDto createDelivery(DeliveryDto dto) {
         Store store = storeRepository.findById(dto.getStoreId())
                 .orElseThrow(() -> new ResourceNotFoundException("Store not found: " + dto.getStoreId()));
-        
+
         DeliverySlot deliverySlot = deliverySlotRepository.findById(dto.getDeliverySlotId())
                 .orElseThrow(() -> new ResourceNotFoundException("DeliverySlot not found: " + dto.getDeliverySlotId()));
-        
+
         Delivery delivery = mapper.toEntity(dto);
         delivery.setStore(store);
         delivery.setDeliverySlot(deliverySlot);
         delivery.setStatus(DeliveryStatus.PENDING);
-        
+
         Delivery saved = repository.save(delivery);
         return mapper.toDto(saved);
     }
@@ -62,7 +62,7 @@ public class DeliveryService {
     public List<DeliveryDto> getDeliveriesByStore(Long storeId) {
         Store store = storeRepository.findById(storeId)
                 .orElseThrow(() -> new ResourceNotFoundException("Store not found: " + storeId));
-        
+
         List<Delivery> deliveries = repository.findByStore(store);
         return mapper.toDtoList(deliveries);
     }
@@ -70,7 +70,7 @@ public class DeliveryService {
     public List<DeliveryDto> getDeliveriesByDeliverySlot(Long deliverySlotId) {
         DeliverySlot deliverySlot = deliverySlotRepository.findById(deliverySlotId)
                 .orElseThrow(() -> new ResourceNotFoundException("DeliverySlot not found: " + deliverySlotId));
-        
+
         List<Delivery> deliveries = repository.findByDeliverySlot(deliverySlot);
         return mapper.toDtoList(deliveries);
     }

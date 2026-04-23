@@ -134,6 +134,8 @@ Représente un magasin ou un administrateur.
 * name
 * password
 * role (ADMIN, STORE)
+* email
+* address
 * balance
 * totalSpent
 * whalePass (boolean)
