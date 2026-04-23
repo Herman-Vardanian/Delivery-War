@@ -2,6 +2,7 @@ package com.delivery.deliverySlot.mapper;
 
 import com.delivery.deliverySlot.dto.DeliverySlotDto;
 import com.delivery.deliverySlot.entity.DeliverySlot;
+import com.delivery.deliverySlot.entity.DeliverySlotId;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -12,7 +13,7 @@ public class DeliverySlotMapper {
             return null;
         }
         return DeliverySlotDto.builder()
-                .id(Long.valueOf(entity.getId().getValue()))
+                .id(Long.parseLong(entity.getId().getValue()))
                 .startTime(entity.getStartTime())
                 .endTime(entity.getEndTime())
                 .capacity(entity.getCapacity())
@@ -25,7 +26,7 @@ public class DeliverySlotMapper {
             return null;
         }
         return DeliverySlot.builder()
-                .id(dto.getId())
+                .id(DeliverySlotId.builder().value(String.valueOf(dto.getId())).build())
                 .startTime(dto.getStartTime())
                 .endTime(dto.getEndTime())
                 .capacity(dto.getCapacity())
