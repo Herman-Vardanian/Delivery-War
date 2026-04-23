@@ -4,7 +4,7 @@ import com.delivery.delivery.dto.DeliveryDto;
 import com.delivery.delivery.entity.Delivery;
 import com.delivery.delivery.entity.DeliveryStatus;
 import com.delivery.store.entity.Store;
-import com.delivery.deliveryslot.entity.DeliverySlot;
+import com.delivery.deliverySlot.entity.DeliverySlot;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;

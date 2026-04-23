@@ -12,7 +12,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Optional;
@@ -42,7 +41,7 @@ public class BidControllerTest {
                 .storeId(1L)
                 .auctionId(1L)
                 .build();
-        
+
         BidDto saved = BidDto.builder()
                 .id(1L)
                 .amount(100.0)

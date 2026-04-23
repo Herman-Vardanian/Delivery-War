@@ -1,10 +1,9 @@
 package com.delivery.auction.entity;
 
-import com.delivery.store.entity.Role;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.math.BigDecimal;
+
 import java.time.LocalDateTime;
 
 @Entity

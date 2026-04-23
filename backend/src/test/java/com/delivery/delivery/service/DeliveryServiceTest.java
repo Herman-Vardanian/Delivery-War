@@ -8,8 +8,8 @@ import com.delivery.delivery.mapper.DeliveryMapper;
 import com.delivery.delivery.repository.DeliveryRepository;
 import com.delivery.store.entity.Store;
 import com.delivery.store.repository.StoreRepository;
-import com.delivery.deliveryslot.entity.DeliverySlot;
-import com.delivery.deliveryslot.repository.DeliverySlotRepository;
+import com.delivery.deliverySlot.entity.DeliverySlot;
+import com.delivery.deliverySlot.repository.DeliverySlotRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -48,7 +48,7 @@ public class DeliveryServiceTest {
     void createDelivery_setsDefaultsAndSaves() {
         Store store = Store.builder().id(1L).name("TestStore").build();
         DeliverySlot deliverySlot = DeliverySlot.builder().id(1L).build();
-        
+
         DeliveryDto dto = DeliveryDto.builder()
                 .address("123 Test St")
                 .deliveryCompany("UPS")
@@ -146,7 +146,7 @@ public class DeliveryServiceTest {
         Store store = Store.builder().id(1L).build();
         Delivery a = Delivery.builder().id(1L).address("Address A").store(store).build();
         Delivery b = Delivery.builder().id(2L).address("Address B").store(store).build();
-        
+
         when(storeRepository.findById(1L)).thenReturn(Optional.of(store));
         when(repository.findByStore(store)).thenReturn(Arrays.asList(a, b));
 
@@ -159,7 +159,7 @@ public class DeliveryServiceTest {
         DeliverySlot deliverySlot = DeliverySlot.builder().id(1L).build();
         Delivery a = Delivery.builder().id(1L).address("Address A").deliverySlot(deliverySlot).build();
         Delivery b = Delivery.builder().id(2L).address("Address B").deliverySlot(deliverySlot).build();
-        
+
         when(deliverySlotRepository.findById(1L)).thenReturn(Optional.of(deliverySlot));
         when(repository.findByDeliverySlot(deliverySlot)).thenReturn(Arrays.asList(a, b));
 

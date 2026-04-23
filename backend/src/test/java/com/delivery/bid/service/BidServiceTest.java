@@ -16,7 +16,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Optional;
@@ -50,7 +49,7 @@ public class BidServiceTest {
     void createBid_setsDefaultsAndSaves() {
         Store store = Store.builder().id(1L).name("TestStore").build();
         Auction auction = Auction.builder().id(1L).build();
-        
+
         BidDto dto = BidDto.builder()
                 .amount(100.0)
                 .storeId(1L)
@@ -139,7 +138,7 @@ public class BidServiceTest {
         Auction auction = Auction.builder().id(1L).build();
         Bid a = Bid.builder().id(1L).amount(100.0).auction(auction).build();
         Bid b = Bid.builder().id(2L).amount(200.0).auction(auction).build();
-        
+
         when(auctionRepository.findById(1L)).thenReturn(Optional.of(auction));
         when(repository.findByAuctionOrderByAmountDesc(auction)).thenReturn(Arrays.asList(a, b));
 
@@ -152,7 +151,7 @@ public class BidServiceTest {
         Store store = Store.builder().id(1L).build();
         Bid a = Bid.builder().id(1L).amount(100.0).store(store).build();
         Bid b = Bid.builder().id(2L).amount(200.0).store(store).build();
-        
+
         when(storeRepository.findById(1L)).thenReturn(Optional.of(store));
         when(repository.findByStore(store)).thenReturn(Arrays.asList(a, b));
 
@@ -164,7 +163,7 @@ public class BidServiceTest {
     void getHighestBid_found() {
         Auction auction = Auction.builder().id(1L).build();
         Bid highest = Bid.builder().id(3L).amount(500.0).auction(auction).build();
-        
+
         when(auctionRepository.findById(1L)).thenReturn(Optional.of(auction));
         when(repository.findTopByAuctionOrderByAmountDesc(auction)).thenReturn(Optional.of(highest));
 
@@ -177,7 +176,7 @@ public class BidServiceTest {
     @Test
     void getHighestBid_notFound() {
         Auction auction = Auction.builder().id(1L).build();
-        
+
         when(auctionRepository.findById(1L)).thenReturn(Optional.of(auction));
         when(repository.findTopByAuctionOrderByAmountDesc(auction)).thenReturn(Optional.empty());
 
