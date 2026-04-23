@@ -2,7 +2,6 @@ package com.delivery.deliverySlot.mapper;
 
 import com.delivery.deliverySlot.dto.DeliverySlotDto;
 import com.delivery.deliverySlot.entity.DeliverySlot;
-import com.delivery.deliverySlot.entity.DeliverySlotId;
 
 import java.time.LocalDateTime;
 
@@ -16,8 +15,7 @@ public class DeliverySlotMapper {
             return null;
         }
         return DeliverySlotDto.builder()
-                .id(Long.parseLong(entity.getId().getVal()))
-                .startTime(entity.getStartTime().toString())
+                .id(entity.getId())                .startTime(entity.getStartTime().toString())
                 .endTime(entity.getEndTime().toString())
                 .capacity(entity.getCapacity())
                 .status(entity.getStatus())
@@ -29,8 +27,7 @@ public class DeliverySlotMapper {
             return null;
         }
         return DeliverySlot.builder()
-                .id(DeliverySlotId.builder().val(String.valueOf(dto.getId())).build())
-                .startTime(LocalDateTime.parse(dto.getStartTime()))
+                .id(dto.getId())                .startTime(LocalDateTime.parse(dto.getStartTime()))
                 .endTime(LocalDateTime.parse(dto.getEndTime()))
                 .capacity(dto.getCapacity())
                 .status(dto.getStatus())
