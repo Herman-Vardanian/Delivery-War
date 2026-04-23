@@ -175,7 +175,6 @@ public class BidServiceTest {
 
      @Test
      void getHighestBid_notFound() {
-         Auction auction = Auction.builder().id(1L).build();
 
          when(auctionRepository.existsById(1L)).thenReturn(true);
          when(repository.findTopByAuctionIdOrderByAmountDesc(1L)).thenReturn(Optional.empty());

@@ -15,14 +15,7 @@ public class DeliverySlot {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "technical_id")
-    private Long technicalId;
-
-    @Embedded
-    @AttributeOverrides({
-        @AttributeOverride(name = "val", column = @Column(name = "slot_id"))
-    })
-    private DeliverySlotId id;
+    private Long id;
 
     @Column(name = "start_time")
     private LocalDateTime startTime;

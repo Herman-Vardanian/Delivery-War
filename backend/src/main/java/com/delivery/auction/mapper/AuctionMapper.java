@@ -2,12 +2,10 @@ package com.delivery.auction.mapper;
 
 import com.delivery.auction.dto.AuctionDto;
 import com.delivery.auction.entity.Auction;
-
-import com.delivery.deliverySlot.entity.DeliverySlotId;
+import com.delivery.deliverySlot.entity.DeliverySlot;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
-
 
 @Component
 public class AuctionMapper {
@@ -23,11 +21,12 @@ public class AuctionMapper {
                 .startTime(a.getStartTime() != null ? a.getStartTime().toString() : null)
                 .endTime(a.getEndTime() != null ? a.getEndTime().toString() : null)
                 .status(a.getStatus())
-                .deliverySlotId(a.getDeliverySlotId() != null ? a.getDeliverySlotId().toString() : null)
+                .deliverySlotId(
+                        a.getDeliverySlot() != null ? a.getDeliverySlot().getId() : null)
                 .build();
     }
 
-    public Auction toEntity(AuctionDto d) {
+    public Auction toEntity(AuctionDto d, DeliverySlot slot) {
         if (d == null) {
             return null;
         }
@@ -38,7 +37,7 @@ public class AuctionMapper {
                 .startTime(LocalDateTime.parse(d.getStartTime()))
                 .endTime(LocalDateTime.parse(d.getEndTime()))
                 .status(d.getStatus())
-                .deliverySlotId(DeliverySlotId.builder().val(String.valueOf(d.getId())).build())
+                .deliverySlot(slot)
                 .build();
     }
 }

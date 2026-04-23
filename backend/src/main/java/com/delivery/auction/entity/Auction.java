@@ -1,6 +1,6 @@
 package com.delivery.auction.entity;
 
-import com.delivery.deliverySlot.entity.DeliverySlotId;
+import com.delivery.deliverySlot.entity.DeliverySlot;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -27,6 +27,7 @@ public class Auction {
     @Enumerated(EnumType.STRING)
     private AuctionStatus status;
 
-    @Embedded
-    private DeliverySlotId deliverySlotId;
+    @ManyToOne
+    @JoinColumn(name = "delivery_slot_id")
+    private DeliverySlot deliverySlot;
 }
