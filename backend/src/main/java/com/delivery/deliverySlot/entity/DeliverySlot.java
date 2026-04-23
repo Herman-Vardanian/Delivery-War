@@ -15,7 +15,10 @@ public class DeliverySlot {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long technicalId;
+
+    @Embedded
+    private DeliverySlotId id;
 
     private LocalDateTime startTime;
 
