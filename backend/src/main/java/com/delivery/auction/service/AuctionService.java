@@ -26,6 +26,8 @@ public class AuctionService {
     }
 
     public AuctionDto createAuction(AuctionDto dto) {
+        validateAuctionTimes(dto.getStartTime(), dto.getEndTime());
+
         Auction auction = mapper.toEntity(dto);
         auction.setId(null);
         if (auction.getStatus() == null) {
@@ -51,6 +53,8 @@ public class AuctionService {
     }
 
     public AuctionDto updateAuction(Long id, AuctionDto dto) {
+        validateAuctionTimes(dto.getStartTime(), dto.getEndTime());
+
         Auction auction = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Auction not found with id: " + id));
 
@@ -61,5 +65,21 @@ public class AuctionService {
 
         Auction saved = repository.save(auction);
         return mapper.toDto(saved);
+    }
+
+
+
+
+    private void validateAuctionTimes(String startTimeStr, String endTimeStr) {
+        if (startTimeStr == null || endTimeStr == null) {
+            throw new IllegalArgumentException("startTime and endTime must not be null");
+        }
+
+        LocalDateTime start = LocalDateTime.parse(startTimeStr);
+        LocalDateTime end = LocalDateTime.parse(endTimeStr);
+
+        if (!start.isBefore(end)) {
+            throw new IllegalArgumentException("Auction startTime must be before endTime");
+        }
     }
 }
