@@ -408,7 +408,7 @@ section { position: relative; z-index: 10; }
 .footer-copy { font-size: 0.65rem; color: var(--c-text3); }
 
 /* ── AUTH PAGE ───────────────────────────────────────────── */
-.auth-home-link { position: fixed; top: 1.25rem; right: 1.75rem; z-index: 100; font-family: var(--font-d); font-size: 1.1rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.06em; color: var(--c-text); text-decoration: none; transition: color 0.2s; }
+.auth-home-link { position: fixed; top: 1.25rem; left: 1.75rem; z-index: 100; font-family: var(--font-d); font-size: 1.1rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.06em; color: var(--c-text); text-decoration: none; transition: color 0.2s; }
 .auth-home-link span { color: var(--c-pri); }
 .auth-home-link:hover { color: var(--c-pri); }
 .auth-main { position: relative; z-index: 10; min-height: 100vh; display: flex; align-items: center; padding: 2rem; }
