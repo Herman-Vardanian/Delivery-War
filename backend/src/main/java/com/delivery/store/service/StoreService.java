@@ -73,4 +73,16 @@ public class StoreService {
         Store saved = repository.save(existing);
         return mapper.toDto(saved);
     }
+
+    public void deleteStore(Long id) {
+        Store existing = repository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Store not found: " + id));
+        if (existing.getReservedBalance() != null && existing.getReservedBalance().compareTo(BigDecimal.ZERO) > 0) {
+            throw new IllegalArgumentException("Impossible de supprimer un store avec des fonds réservés.");
+        }
+        if (existing.getBalance() != null && existing.getBalance().compareTo(BigDecimal.ZERO) != 0) {
+            throw new IllegalArgumentException("Impossible de supprimer un store avec un solde non nul.");
+        }
+        repository.delete(existing);
+    }
 }
