@@ -149,7 +149,7 @@ Représente un créneau de livraison.
 * startTime
 * endTime
 * capacity
-* status (OPEN, CLOSED)
+* status (OPEN, PENDING, CLOSED)
 
 ---
 
@@ -161,7 +161,7 @@ Représente une enchère créée par un administrateur.
 * startPrice
 * startTime
 * endTime
-* status (OPEN, CLOSED)
+* status (OPEN, PENDING, CLOSED)
 * deliverySlotId (FK)
 
 ---
@@ -173,6 +173,7 @@ Représente une offre faite par un magasin sur une enchère.
 * id (PK)
 * amount
 * timestamp
+* status (WON, OUTBID)
 * storeId (FK)
 * auctionId (FK)
 
@@ -185,6 +186,7 @@ Représente une livraison à effectuer.
 * id (PK)
 * address
 * status
+* deliveryCompany
 * storeId (FK)
 * deliverySlotId (FK)
 
