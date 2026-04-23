@@ -10,5 +10,5 @@ export interface Auction {
     startTime?: string | null;
     endTime?: string | null;
     status: AuctionStatus;
-    deliverySlotId: number;
+    deliverySlotId?: number | null;
 }

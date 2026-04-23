@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { type Store } from '../../models/authModel';
+import { type Store } from '../../interfaces/Store';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 

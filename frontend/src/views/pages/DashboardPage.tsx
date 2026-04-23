@@ -1,17 +1,19 @@
 import { useState, useEffect, useCallback } from 'react';
 import { authModel } from '../../models/authModel';
-import { auctionModel, type ApiAuction, type ApiHighestBid } from '../../models/auctionModel';
+import { auctions as auctionsApi, bids as bidsApi } from '../../controllers/endpoints';
+import type { Auction as BackendAuction } from '../../interfaces/Auction';
+import type { Bid } from '../../interfaces/Bid';
+import { AuctionStatus } from '../../interfaces/Auction';
 
-type AuctionStatus = 'leading' | 'outbid' | 'open' | 'won' | 'lost';
+type DisplayStatus = 'leading' | 'outbid' | 'open' | 'won' | 'lost';
 
-interface Auction {
+interface DisplayAuction {
   id: number;
-  zone: string;
   slot: string;
   endTime: string;
   currentBid: number;
   myBid: number | null;
-  status: AuctionStatus;
+  status: DisplayStatus;
 }
 
 function Timer({ endTime }: { endTime: string }) {
@@ -53,23 +55,23 @@ function toIsoLocal(date: Date): string {
 }
 
 function buildAuction(
-  a: ApiAuction,
-  highest: ApiHighestBid | null,
-  userBidMap: Map<number, ApiHighestBid>,
+  a: BackendAuction,
+  highest: Bid | null,
+  userBidMap: Map<number, Bid>,
   userId: number | undefined,
-): Auction {
+): DisplayAuction {
   const now = Date.now();
   const endMs = a.endTime ? new Date(a.endTime).getTime() : now;
-  const isActive = endMs > now && a.status !== 'CLOSED';
+  const isActive = endMs > now && a.status !== AuctionStatus.CLOSED;
   const currentBid = highest?.amount ?? a.startPrice ?? 0;
   const slot = a.startTime && a.endTime ? `${fmtHour(a.startTime)}–${fmtHour(a.endTime)}` : '—';
-  const myBidEntry = userBidMap.get(a.id!);
+  const myBidEntry = userBidMap.get(a.id);
   const myBid = myBidEntry?.amount ?? null;
   const isLeading = highest?.storeId === userId;
 
-  let status: AuctionStatus;
+  let status: DisplayStatus;
   if (!isActive) {
-    status = isLeading ? 'won' : myBid !== null ? 'lost' : 'lost';
+    status = isLeading ? 'won' : 'lost';
   } else if (isLeading) {
     status = 'leading';
   } else if (myBid !== null) {
@@ -78,11 +80,10 @@ function buildAuction(
     status = 'open';
   }
 
-  return { id: a.id!, zone: a.zone || '—', slot, endTime: a.endTime || '', currentBid, myBid, status };
+  return { id: a.id, slot, endTime: a.endTime ?? '', currentBid, myBid, status };
 }
 
 interface NewAuctionForm {
-  zone: string;
   slot: string;
   startBid: string;
   durationMin: string;
@@ -93,34 +94,33 @@ export default function DashboardPage() {
   const storeName = user?.name || '—';
   const isAdmin = user?.role === 'ADMIN';
 
-  const [auctions, setAuctions] = useState<Auction[]>([]);
+  const [auctions, setAuctions] = useState<DisplayAuction[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [bidInputs, setBidInputs] = useState<Record<number, string>>({});
   const [bidErrors, setBidErrors] = useState<Record<number, string>>({});
 
-  const [newAuction, setNewAuction] = useState<NewAuctionForm>({ zone: '', slot: '', startBid: '', durationMin: '5' });
+  const [newAuction, setNewAuction] = useState<NewAuctionForm>({ slot: '', startBid: '', durationMin: '5' });
   const [createError, setCreateError] = useState('');
   const [creating, setCreating] = useState(false);
 
   const loadAuctions = useCallback(async () => {
     try {
-      const list = await auctionModel.listAuctions();
-      const userBidMap = new Map<number, ApiHighestBid>();
+      const list = await auctionsApi.all();
+      const userBidMap = new Map<number, Bid>();
       if (user?.id) {
-        const myBids = await auctionModel.getBidsByStore(user.id);
+        const myBids = await bidsApi.byStore(user.id);
         for (const b of myBids) {
-          if (b.auctionId != null) {
-            const prev = userBidMap.get(b.auctionId);
-            if (!prev || (b.amount ?? 0) > (prev.amount ?? 0)) {
-              userBidMap.set(b.auctionId, b);
-            }
+          const prev = userBidMap.get(b.auctionId);
+          if (!prev || b.amount > prev.amount) {
+            userBidMap.set(b.auctionId, b);
           }
         }
       }
       const withBids = await Promise.all(
         list.map(async (a) => {
-          const highest = a.id != null ? await auctionModel.getHighestBid(a.id) : null;
+          let highest: Bid | null = null;
+          try { highest = await auctionsApi.highestBid(a.id); } catch { /* 404 = pas de mise */ }
           return buildAuction(a, highest, userBidMap, user?.id);
         })
       );
@@ -140,8 +140,8 @@ export default function DashboardPage() {
   }, [loadAuctions]);
 
   const createAuction = async () => {
-    if (!newAuction.zone.trim() || !newAuction.startBid) {
-      setCreateError('Zone et prix de départ sont requis.');
+    if (!newAuction.startBid) {
+      setCreateError('Le prix de départ est requis.');
       return;
     }
     const startBid = parseFloat(newAuction.startBid);
@@ -155,15 +155,14 @@ export default function DashboardPage() {
     setCreateError('');
     setCreating(true);
     try {
-      await auctionModel.createAuction({
-        zone: newAuction.zone.trim(),
+      await auctionsApi.create({
+        id: 0,
         startPrice: startBid,
         startTime: toIsoLocal(now),
         endTime: toIsoLocal(end),
-        deliverySlotId: newAuction.slot.trim() || newAuction.zone.trim(),
-        status: 'OPEN',
+        status: AuctionStatus.OPEN,
       });
-      setNewAuction({ zone: '', slot: '', startBid: '', durationMin: '5' });
+      setNewAuction({ slot: '', startBid: '', durationMin: '5' });
       await loadAuctions();
     } catch (e: unknown) {
       setCreateError(e instanceof Error ? e.message : 'Erreur création');
@@ -172,7 +171,7 @@ export default function DashboardPage() {
     }
   };
 
-  const placeBid = async (a: Auction) => {
+  const placeBid = async (a: DisplayAuction) => {
     const amount = parseFloat(bidInputs[a.id] ?? '');
     if (!amount || amount <= a.currentBid) {
       setBidErrors((p) => ({ ...p, [a.id]: `Montant doit être > ${a.currentBid} €` }));
@@ -181,7 +180,7 @@ export default function DashboardPage() {
     if (!user?.id) return;
     setBidErrors((p) => ({ ...p, [a.id]: '' }));
     try {
-      await auctionModel.placeBid(a.id, user.id, amount);
+      await bidsApi.create({ id: 0, auctionId: a.id, storeId: user.id, amount });
       setBidInputs((p) => ({ ...p, [a.id]: '' }));
       await loadAuctions();
     } catch (e: unknown) {
@@ -212,14 +211,7 @@ export default function DashboardPage() {
             <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--c-pri)', marginBottom: '0.75rem', fontWeight: 700 }}>
               Admin — Créer une enchère
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr auto', gap: '0.75rem', alignItems: 'end' }}>
-              <div>
-                <label style={{ fontSize: '0.68rem', color: 'var(--c-text3)', display: 'block', marginBottom: '0.3rem' }}>Zone</label>
-                <input type="text" placeholder="Paris 18e" value={newAuction.zone}
-                  onChange={(e) => setNewAuction((p) => ({ ...p, zone: e.target.value }))}
-                  style={{ width: '100%', boxSizing: 'border-box', background: 'var(--c-bg)', border: '1px solid var(--c-border)', borderRadius: 6, padding: '0.45rem 0.65rem', fontSize: '0.82rem', color: 'var(--c-text)', outline: 'none' }}
-                />
-              </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr auto', gap: '0.75rem', alignItems: 'end' }}>
               <div>
                 <label style={{ fontSize: '0.68rem', color: 'var(--c-text3)', display: 'block', marginBottom: '0.3rem' }}>Créneau (libellé)</label>
                 <input type="text" placeholder="09h–11h" value={newAuction.slot}
@@ -287,7 +279,7 @@ export default function DashboardPage() {
                 return (
                   <div key={a.id} style={{ background: 'var(--c-surf)', border: `1px solid ${cfg.border}`, borderRadius: 10, padding: '1rem 1.25rem', display: 'grid', gridTemplateColumns: '1fr auto auto auto', alignItems: 'center', gap: '1.5rem' }}>
                     <div>
-                      <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--c-text)', marginBottom: '0.2rem' }}>{a.zone}</div>
+                      <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--c-text)', marginBottom: '0.2rem' }}>{`Enchère #${a.id}`}</div>
                       <div style={{ fontSize: '0.75rem', color: 'var(--c-text3)' }}>Créneau {a.slot}</div>
                     </div>
                     <div style={{ textAlign: 'center' }}>
@@ -345,7 +337,7 @@ export default function DashboardPage() {
                 return (
                   <div key={a.id} style={{ background: 'var(--c-surf)', border: '1px solid var(--c-border)', borderRadius: 10, padding: '0.875rem 1.25rem', display: 'grid', gridTemplateColumns: '1fr auto auto auto', alignItems: 'center', gap: '1.5rem', opacity: 0.7 }}>
                     <div>
-                      <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--c-text)', marginBottom: '0.15rem' }}>{a.zone}</div>
+                      <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--c-text)', marginBottom: '0.15rem' }}>{`Enchère #${a.id}`}</div>
                       <div style={{ fontSize: '0.72rem', color: 'var(--c-text3)' }}>Créneau {a.slot}</div>
                     </div>
                     <div style={{ fontSize: '0.72rem', color: 'var(--c-text3)' }}>Terminé</div>

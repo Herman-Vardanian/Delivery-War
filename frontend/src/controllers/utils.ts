@@ -1,7 +1,7 @@
 // utils/api.ts
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 
-interface ApiOptions<T = unknown> {
+interface ApiOptions {
     method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
     headers?: Record<string, string>;
     body?: BodyInit | null;
@@ -10,7 +10,7 @@ interface ApiOptions<T = unknown> {
 
 async function apiRequest<T>(
     endpoint: string,
-    options: ApiOptions<T> = {}
+    options: ApiOptions = {}
 ): Promise<T> {
     const url = buildUrl(endpoint, options.queryParams);
 
