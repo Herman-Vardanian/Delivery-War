@@ -1,9 +1,16 @@
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { authModel } from '../../models/authModel';
 
 export default function AppNavbar() {
   const { pathname } = useLocation();
-  const user = authModel.getUser();
+  const [user, setUser] = useState(authModel.getUser());
+
+  useEffect(() => {
+    const onUpdate = () => setUser(authModel.getUser());
+    window.addEventListener('user-updated', onUpdate);
+    return () => window.removeEventListener('user-updated', onUpdate);
+  }, []);
 
   const linkStyle = (path: string) => ({
     fontSize: '0.8rem',
