@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { authModel } from '../../models/authModel';
 import { auctions as auctionsApi, bids as bidsApi } from '../../controllers/endpoints';
 import { api } from '../../controllers/utils';
@@ -116,6 +116,15 @@ export default function DashboardPage() {
   const [createError, setCreateError] = useState('');
   const [creating, setCreating] = useState(false);
 
+  const pauseRefresh = useRef(false);
+
+  const onFormFocus = () => { pauseRefresh.current = true; };
+  const onFormBlur = (e: React.FocusEvent<HTMLDivElement>) => {
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      pauseRefresh.current = false;
+    }
+  };
+
   const loadAuctions = useCallback(async () => {
     try {
       const list = await auctionsApi.all();
@@ -147,7 +156,9 @@ export default function DashboardPage() {
 
   useEffect(() => {
     void loadAuctions();
-    const id = setInterval(() => void loadAuctions(), 10000);
+    const id = setInterval(() => {
+      if (!pauseRefresh.current) void loadAuctions();
+    }, 10000);
     return () => clearInterval(id);
   }, [loadAuctions]);
 
@@ -167,6 +178,7 @@ export default function DashboardPage() {
 
     setCreateError('');
     setCreating(true);
+    pauseRefresh.current = true;
     try {
       const slot = await api.post<DeliverySlot>('/deliverySlots', {
         startTime: toIsoLocal(deliveryStart),
@@ -187,6 +199,7 @@ export default function DashboardPage() {
       setCreateError(e instanceof Error ? e.message : 'Erreur création');
     } finally {
       setCreating(false);
+      pauseRefresh.current = false;
     }
   };
 
@@ -198,12 +211,15 @@ export default function DashboardPage() {
     }
     if (!user?.id) return;
     setBidErrors((p) => ({ ...p, [a.id]: '' }));
+    pauseRefresh.current = true;
     try {
-      await bidsApi.create({ id: 0, auctionId: a.id, storeId: user.id, amount });
+      await api.post<Bid>('/bids', { auctionId: a.id, storeId: user.id, amount });
       setBidInputs((p) => ({ ...p, [a.id]: '' }));
       await loadAuctions();
     } catch (e: unknown) {
       setBidErrors((p) => ({ ...p, [a.id]: e instanceof Error ? e.message : 'Erreur mise' }));
+    } finally {
+      pauseRefresh.current = false;
     }
   };
 
@@ -226,7 +242,7 @@ export default function DashboardPage() {
 
         {/* ── Section Admin : Créer une enchère ── */}
         {isAdmin && (
-          <div style={{ background: 'rgba(255,107,26,.06)', border: '1px solid rgba(255,107,26,.25)', borderRadius: 12, padding: '1.25rem 1.5rem', marginBottom: '1.75rem' }}>
+          <div onFocus={onFormFocus} onBlur={onFormBlur} style={{ background: 'rgba(255,107,26,.06)', border: '1px solid rgba(255,107,26,.25)', borderRadius: 12, padding: '1.25rem 1.5rem', marginBottom: '1.75rem' }}>
             <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--c-pri)', marginBottom: '0.75rem', fontWeight: 700 }}>
               Admin — Créer une enchère
             </div>
@@ -339,7 +355,7 @@ export default function DashboardPage() {
                         {cfg.label}
                       </span>
                       {a.status !== 'won' && (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                        <div onFocus={onFormFocus} onBlur={onFormBlur} style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
                           <div style={{ display: 'flex', gap: '0.4rem' }}>
                             <input type="number" min={a.currentBid + 1} placeholder={`> ${a.currentBid} €`}
                               disabled={a.status === 'leading'}
