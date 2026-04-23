@@ -57,6 +57,14 @@ public class StoreService {
                 .collect(Collectors.toList());
     }
 
+    public StoreDto login(String name, String password) {
+        Store store = repository.findByName(name)
+                .orElseThrow(() -> new IllegalArgumentException("Identifiants incorrects."));
+        if (!password.equals(store.getPassword()))
+            throw new IllegalArgumentException("Identifiants incorrects.");
+        return mapper.toDto(store);
+    }
+
     public List<StoreDto> listStores() {
         return repository.findAll().stream().map(mapper::toDto).collect(Collectors.toList());
     }

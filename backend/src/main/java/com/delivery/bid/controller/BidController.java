@@ -7,6 +7,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/bids")
@@ -32,5 +33,22 @@ public class BidController {
     @GetMapping
     public ResponseEntity<List<BidDto>> listBids() {
         return ResponseEntity.ok(bidService.listBids());
+    }
+
+    @GetMapping("/auction/{auctionId}")
+    public ResponseEntity<List<BidDto>> getBidsByAuction(@PathVariable Long auctionId) {
+        return ResponseEntity.ok(bidService.getBidsByAuction(auctionId));
+    }
+
+    @GetMapping("/store/{storeId}")
+    public ResponseEntity<List<BidDto>> getBidsByStore(@PathVariable Long storeId) {
+        return ResponseEntity.ok(bidService.getBidsByStore(storeId));
+    }
+
+    @GetMapping("/auction/{auctionId}/highest")
+    public ResponseEntity<?> getHighestBid(@PathVariable Long auctionId) {
+        Optional<BidDto> highest = bidService.getHighestBid(auctionId);
+        return highest.map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 }
