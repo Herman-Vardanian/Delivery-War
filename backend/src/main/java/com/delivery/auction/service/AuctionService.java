@@ -6,6 +6,8 @@ import com.delivery.auction.entity.AuctionStatus;
 import com.delivery.auction.mapper.AuctionMapper;
 import com.delivery.auction.repository.AuctionRepository;
 import com.delivery.common.exception.ResourceNotFoundException;
+import com.delivery.deliverySlot.entity.DeliverySlot;
+import com.delivery.deliverySlot.repository.DeliverySlotRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,20 +21,30 @@ public class AuctionService {
 
     private final AuctionRepository repository;
     private final AuctionMapper mapper;
+    private final DeliverySlotRepository deliverySlotRepository;
 
-    public AuctionService(AuctionRepository repository, AuctionMapper mapper) {
+    public AuctionService(AuctionRepository repository,
+            AuctionMapper mapper,
+            DeliverySlotRepository deliverySlotRepository) {
         this.repository = repository;
         this.mapper = mapper;
+        this.deliverySlotRepository = deliverySlotRepository;
     }
 
     public AuctionDto createAuction(AuctionDto dto) {
         validateAuctionTimes(dto.getStartTime(), dto.getEndTime());
 
-        Auction auction = mapper.toEntity(dto);
+        DeliverySlot slot = deliverySlotRepository.findById(dto.getDeliverySlotId())
+                .orElseThrow(() -> new ResourceNotFoundException("Delivery slot not found"));
+
+        Auction auction = mapper.toEntity(dto, slot);
+
         auction.setId(null);
+
         if (auction.getStatus() == null) {
             auction.setStatus(AuctionStatus.OPEN);
         }
+
         Auction saved = repository.save(auction);
         return mapper.toDto(saved);
     }
@@ -41,6 +53,7 @@ public class AuctionService {
     public AuctionDto getAuction(Long id) {
         Auction auction = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Auction not found with id: " + id));
+
         return mapper.toDto(auction);
     }
 
@@ -58,17 +71,25 @@ public class AuctionService {
         Auction auction = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Auction not found with id: " + id));
 
+        DeliverySlot slot = null;
+
+        if (dto.getDeliverySlotId() != null) {
+            slot = deliverySlotRepository.findById(dto.getDeliverySlotId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Delivery slot not found"));
+        }
+
         auction.setStartPrice(dto.getStartPrice());
         auction.setStartTime(LocalDateTime.parse(dto.getStartTime()));
         auction.setEndTime(LocalDateTime.parse(dto.getEndTime()));
         auction.setStatus(dto.getStatus());
 
+        if (slot != null) {
+            auction.setDeliverySlot(slot);
+        }
+
         Auction saved = repository.save(auction);
         return mapper.toDto(saved);
     }
-
-
-
 
     private void validateAuctionTimes(String startTimeStr, String endTimeStr) {
         if (startTimeStr == null || endTimeStr == null) {

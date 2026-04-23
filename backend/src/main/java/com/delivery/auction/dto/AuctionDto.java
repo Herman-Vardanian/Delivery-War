@@ -1,8 +1,6 @@
 package com.delivery.auction.dto;
 
 import com.delivery.auction.entity.AuctionStatus;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -15,13 +13,8 @@ import lombok.NoArgsConstructor;
 public class AuctionDto {
     private Long id;
     private Float startPrice;
-
     private String startTime;
-
     private String endTime;
-
-    @Enumerated(EnumType.STRING)
     private AuctionStatus status;
-
-    private String deliverySlotId;
+    private Long deliverySlotId;
 }
