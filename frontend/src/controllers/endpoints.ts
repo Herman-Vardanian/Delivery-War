@@ -20,7 +20,7 @@ export const auctions = {
 
     // Bids par auction
     bids: (auctionId: number) => api.get<Bid[]>(`/auctions/${auctionId}/bids`),
-    highestBid: (auctionId: number) => api.get<Bid>(`/auctions/${auctionId}/highest`),
+    highestBid: (auctionId: number) => api.get<Bid | null>(`/auctions/${auctionId}/highest`),
 
     // Leaderboards
     auctionLeaderboard: (auctionId: number) => api.get<Bid[]>(`/auctions/${auctionId}/leaderboard`),

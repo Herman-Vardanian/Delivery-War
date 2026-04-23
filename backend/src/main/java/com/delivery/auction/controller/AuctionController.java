@@ -48,9 +48,7 @@ public class AuctionController {
 
     @GetMapping("/{auctionId}/highest")
     public ResponseEntity<BidDto> getHighestBid(@PathVariable Long auctionId) {
-        Optional<BidDto> highestBid = bidService.getHighestBid(auctionId);
-        return highestBid.map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        return ResponseEntity.ok(bidService.getHighestBid(auctionId).orElse(null));
     }
 
     @GetMapping("/{auctionId}/leaderboard")

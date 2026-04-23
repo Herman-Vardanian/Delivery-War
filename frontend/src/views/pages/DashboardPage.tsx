@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { authModel } from '../../models/authModel';
-import { auctions as auctionsApi, bids as bidsApi, deliverySlots as deliverySlotsApi } from '../../controllers/endpoints';
+import { auctions as auctionsApi, bids as bidsApi } from '../../controllers/endpoints';
+import { api } from '../../controllers/utils';
 import type { Auction as BackendAuction } from '../../interfaces/Auction';
 import type { Bid } from '../../interfaces/Bid';
+import type { DeliverySlot } from '../../interfaces/DeliverySlot';
 import { AuctionStatus } from '../../interfaces/Auction';
-import { DeliverySlotStatus } from '../../interfaces/DeliverySlot';
 
 type DisplayStatus = 'leading' | 'outbid' | 'open' | 'won' | 'lost';
 
@@ -52,7 +53,8 @@ function fmtHour(iso: string): string {
 }
 
 function toIsoLocal(date: Date): string {
-  return date.toISOString().slice(0, 19);
+  const p = (n: number) => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${p(date.getMonth() + 1)}-${p(date.getDate())}T${p(date.getHours())}:${p(date.getMinutes())}:${p(date.getSeconds())}`;
 }
 
 function buildAuction(
@@ -167,16 +169,13 @@ export default function DashboardPage() {
     setCreateError('');
     setCreating(true);
     try {
-      const slot = await deliverySlotsApi.create({
-        id: 0,
-        technicalId: 0,
-        startTime: toIsoLocal(deliveryStart) as unknown as Date,
-        endTime: toIsoLocal(deliveryEnd) as unknown as Date,
+      const slot = await api.post<DeliverySlot>('/deliverySlots', {
+        startTime: toIsoLocal(deliveryStart),
+        endTime: toIsoLocal(deliveryEnd),
         capacity: 1,
-        status: DeliverySlotStatus.OPEN,
+        status: 'OPEN',
       });
-      await auctionsApi.create({
-        id: 0,
+      await api.post<BackendAuction>('/auctions', {
         startPrice: startBid,
         startTime: toIsoLocal(auctionBegin),
         endTime: toIsoLocal(auctionEnd),
