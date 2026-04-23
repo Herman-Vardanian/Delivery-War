@@ -1,14 +1,17 @@
 package com.delivery.store.controller;
 
+import com.delivery.common.exception.GlobalExceptionHandler;
 import com.delivery.common.exception.ResourceNotFoundException;
 import com.delivery.store.dto.StoreDto;
 import com.delivery.store.service.StoreService;
+import com.delivery.bid.service.BidService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -16,12 +19,14 @@ import java.math.BigDecimal;
 import java.util.Arrays;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(controllers = StoreController.class)
 @AutoConfigureMockMvc(addFilters = false)
+@Import(GlobalExceptionHandler.class)
 public class StoreControllerTest {
 
     @Autowired
@@ -32,6 +37,9 @@ public class StoreControllerTest {
 
     @MockBean
     private StoreService storeService;
+
+    @MockBean
+    private BidService bidService;
 
     @Test
     void createStore_returnsOk() throws Exception {

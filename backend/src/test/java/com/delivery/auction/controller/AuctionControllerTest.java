@@ -2,6 +2,7 @@ package com.delivery.auction.controller;
 
 import com.delivery.auction.dto.AuctionDto;
 import com.delivery.auction.service.AuctionService;
+import com.delivery.bid.service.BidService;
 import com.delivery.common.exception.ResourceNotFoundException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -34,6 +35,9 @@ public class AuctionControllerTest {
 
     @MockBean
     private AuctionService auctionService;
+
+    @MockBean
+    private BidService bidService;
 
     @Test
     void createAuction_returnsCreated() throws Exception {
