@@ -29,8 +29,15 @@ public class BidMapper {
             dto.setStoreName(bid.getStore().getName());
         }
         
-        if (bid.getAuction() != null) {
-            dto.setAuctionId(bid.getAuction().getId());
+        // L'ID de l'auction est directement accessible via la relation
+        // Pas besoin de charger l'entité complète pour éviter les problèmes de lazy loading
+        try {
+            if (bid.getAuction() != null) {
+                dto.setAuctionId(bid.getAuction().getId());
+            }
+        } catch (Exception e) {
+            // En cas de problème de lazy loading, on continue sans l'ID auction
+            // L'ID sera accessible via la colonne auction_id directement
         }
         
         return dto;

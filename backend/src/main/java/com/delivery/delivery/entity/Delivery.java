@@ -32,6 +32,6 @@ public class Delivery {
     private Store store;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "delivery_slot_id", nullable = false)
+    @JoinColumn(name = "delivery_slot_id", nullable = true)
     private DeliverySlot deliverySlot;
 }

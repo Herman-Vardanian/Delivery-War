@@ -2,6 +2,7 @@ package com.delivery.auction.controller;
 
 import com.delivery.auction.dto.AuctionDto;
 import com.delivery.auction.service.AuctionService;
+import com.delivery.bid.service.BidService;
 import com.delivery.common.exception.ResourceNotFoundException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -35,12 +36,15 @@ public class AuctionControllerTest {
     @MockBean
     private AuctionService auctionService;
 
+    @MockBean
+    private BidService bidService;
+
     @Test
     void createAuction_returnsCreated() throws Exception {
         AuctionDto input = AuctionDto.builder()
                 .startPrice(10.0f)
-                .startTime(LocalDateTime.of(2026, 4, 23, 10, 0))
-                .endTime(LocalDateTime.of(2026, 4, 23, 11, 0))
+                .startTime(LocalDateTime.of(2026, 4, 23, 10, 0).toString())
+                .endTime(LocalDateTime.of(2026, 4, 23, 11, 0).toString())
                 .build();
 
         AuctionDto saved = AuctionDto.builder()

@@ -39,16 +39,16 @@ public class AuctionServiceTest {
     void createAuction_savesAndReturnsDto() {
         AuctionDto dto = AuctionDto.builder()
                 .startPrice(10.0f)
-                .startTime(LocalDateTime.of(2026, 4, 23, 10, 0))
-                .endTime(LocalDateTime.of(2026, 4, 23, 11, 0))
+                .startTime(LocalDateTime.of(2026, 4, 23, 10, 0).toString())
+                .endTime(LocalDateTime.of(2026, 4, 23, 11, 0).toString())
                 .status(AuctionStatus.OPEN)
                 .build();
 
         Auction savedEntity = Auction.builder()
                 .id(1L)
                 .startPrice(10.0f)
-                .startTime(dto.getStartTime())
-                .endTime(dto.getEndTime())
+                .startTime(LocalDateTime.parse(dto.getStartTime()))
+                .endTime(LocalDateTime.parse(dto.getEndTime()))
                 .status(AuctionStatus.OPEN)
                 .build();
 
@@ -65,7 +65,10 @@ public class AuctionServiceTest {
 
     @Test
     void getAuction_found() {
-        Auction a = Auction.builder().id(2L).startPrice(20.0f).status(AuctionStatus.OPEN).build();
+        Auction a = Auction.builder().id(2L).startPrice(20.0f).status(AuctionStatus.OPEN)
+                .startTime(LocalDateTime.of(2026, 4, 23, 10, 0))
+                .endTime(LocalDateTime.of(2026, 4, 23, 11, 0))
+                .build();
         when(repository.findById(2L)).thenReturn(Optional.of(a));
 
         AuctionDto dto = service.getAuction(2L);
@@ -84,8 +87,10 @@ public class AuctionServiceTest {
 
     @Test
     void listAuctions_returnsAll() {
-        Auction a = Auction.builder().id(1L).startPrice(10.0f).build();
-        Auction b = Auction.builder().id(2L).startPrice(20.0f).build();
+        Auction a = Auction.builder().id(1L).startPrice(10.0f).startTime(LocalDateTime.of(2026, 4, 23, 10, 0))
+                .endTime(LocalDateTime.of(2026, 4, 23, 11, 0)).status(AuctionStatus.OPEN).build();
+        Auction b = Auction.builder().id(2L).startPrice(20.0f).startTime(LocalDateTime.of(2026, 4, 23, 10, 0))
+                .endTime(LocalDateTime.of(2026, 4, 23, 11, 0)).status(AuctionStatus.OPEN).build();
         when(repository.findAll()).thenReturn(Arrays.asList(a, b));
 
         var list = service.listAuctions();
@@ -115,6 +120,9 @@ public class AuctionServiceTest {
 
         AuctionDto dto = AuctionDto.builder()
                 .startPrice(99.9f)
+                .startTime(LocalDateTime.of(2026, 4, 23, 10, 0).toString())
+                .endTime(LocalDateTime.of(2026, 4, 23, 11, 0).toString())
+                .deliverySlotId("1")
                 .status(AuctionStatus.CLOSED)
                 .build();
 

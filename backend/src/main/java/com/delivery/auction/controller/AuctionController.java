@@ -53,6 +53,16 @@ public class AuctionController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @GetMapping("/{auctionId}/leaderboard")
+    public ResponseEntity<List<BidDto>> getLeaderboardByAuction(@PathVariable Long auctionId) {
+        return ResponseEntity.ok(bidService.getLeaderboardByAuction(auctionId));
+    }
+
+    @GetMapping("/leaderboard")
+    public ResponseEntity<List<BidDto>> getGlobalLeaderboard() {
+        return ResponseEntity.ok(bidService.getGlobalLeaderboard());
+    }
+
     @PutMapping("/{id}")
     public ResponseEntity<AuctionDto> updateAuction(@PathVariable Long id,
                                                     @Validated @RequestBody AuctionDto dto) {

@@ -12,7 +12,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.time.LocalDateTime;
+
 import java.util.Arrays;
 import java.util.List;
 
@@ -34,8 +34,8 @@ public class DeliverySlotControllerTest {
     @MockBean
     private DeliverySlotService deliverySlotService;
 
-    private static final LocalDateTime START = LocalDateTime.of(2024, 6, 1, 9, 0);
-    private static final LocalDateTime END   = LocalDateTime.of(2024, 6, 1, 11, 0);
+    private static final String START = "2024-06-01T09:00:00";
+    private static final String END   = "2024-06-01T11:00:00";
 
     // ------------------------------------------------------------------ POST /api/deliverySlots
 

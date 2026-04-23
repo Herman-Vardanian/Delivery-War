@@ -37,12 +37,16 @@ public class DeliveryService {
         Store store = storeRepository.findById(dto.getStoreId())
                 .orElseThrow(() -> new ResourceNotFoundException("Store not found: " + dto.getStoreId()));
 
-        DeliverySlot deliverySlot = deliverySlotRepository.findById(dto.getDeliverySlotId())
-                .orElseThrow(() -> new ResourceNotFoundException("DeliverySlot not found: " + dto.getDeliverySlotId()));
-
         Delivery delivery = mapper.toEntity(dto);
         delivery.setStore(store);
-        delivery.setDeliverySlot(deliverySlot);
+        
+        // DeliverySlot is optional for now
+        if (dto.getDeliverySlotId() != null) {
+            DeliverySlot deliverySlot = deliverySlotRepository.findById(dto.getDeliverySlotId())
+                    .orElseThrow(() -> new ResourceNotFoundException("DeliverySlot not found: " + dto.getDeliverySlotId()));
+            delivery.setDeliverySlot(deliverySlot);
+        }
+        
         delivery.setStatus(DeliveryStatus.PENDING);
 
         Delivery saved = repository.save(delivery);
