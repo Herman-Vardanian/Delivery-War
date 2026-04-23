@@ -63,10 +63,12 @@ public class BidService {
     }
 
     public List<BidDto> getBidsByAuction(Long auctionId) {
-        Auction auction = auctionRepository.findById(auctionId)
-                .orElseThrow(() -> new ResourceNotFoundException("Auction not found: " + auctionId));
+        // Verify auction exists first
+        if (!auctionRepository.existsById(auctionId)) {
+            throw new ResourceNotFoundException("Auction not found: " + auctionId);
+        }
         
-        List<Bid> bids = repository.findByAuctionOrderByAmountDesc(auction);
+        List<Bid> bids = repository.findBidsByAuctionIdOrderByAmountDesc(auctionId);
         return mapper.toDtoList(bids);
     }
 
@@ -79,10 +81,12 @@ public class BidService {
     }
 
     public Optional<BidDto> getHighestBid(Long auctionId) {
-        Auction auction = auctionRepository.findById(auctionId)
-                .orElseThrow(() -> new ResourceNotFoundException("Auction not found: " + auctionId));
+        // Verify auction exists first
+        if (!auctionRepository.existsById(auctionId)) {
+            throw new ResourceNotFoundException("Auction not found: " + auctionId);
+        }
         
-        return repository.findTopByAuctionOrderByAmountDesc(auction)
+        return repository.findTopByAuctionIdOrderByAmountDesc(auctionId)
                 .map(mapper::toDto);
     }
 }

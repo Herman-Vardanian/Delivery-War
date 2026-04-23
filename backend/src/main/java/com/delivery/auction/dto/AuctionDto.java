@@ -18,9 +18,9 @@ public class AuctionDto {
     private Long id;
     private Float startPrice;
 
-    private LocalDateTime startTime;
+    private String startTime;
 
-    private LocalDateTime endTime;
+    private String endTime;
 
     @Enumerated(EnumType.STRING)
     private AuctionStatus status;
