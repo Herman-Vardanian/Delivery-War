@@ -133,18 +133,18 @@ public class BidServiceTest {
         assertEquals(2, list.size());
     }
 
-    @Test
-    void getBidsByAuction_returnsList() {
-        Auction auction = Auction.builder().id(1L).build();
-        Bid a = Bid.builder().id(1L).amount(100.0).auction(auction).build();
-        Bid b = Bid.builder().id(2L).amount(200.0).auction(auction).build();
+     @Test
+     void getBidsByAuction_returnsList() {
+         Auction auction = Auction.builder().id(1L).build();
+         Bid a = Bid.builder().id(1L).amount(100.0).auction(auction).build();
+         Bid b = Bid.builder().id(2L).amount(200.0).auction(auction).build();
 
-        when(auctionRepository.findById(1L)).thenReturn(Optional.of(auction));
-        when(repository.findByAuctionOrderByAmountDesc(auction)).thenReturn(Arrays.asList(a, b));
+         when(auctionRepository.existsById(1L)).thenReturn(true);
+         when(repository.findBidsByAuctionIdOrderByAmountDesc(1L)).thenReturn(Arrays.asList(a, b));
 
-        var list = service.getBidsByAuction(1L);
-        assertEquals(2, list.size());
-    }
+         var list = service.getBidsByAuction(1L);
+         assertEquals(2, list.size());
+     }
 
     @Test
     void getBidsByStore_returnsList() {
@@ -159,28 +159,28 @@ public class BidServiceTest {
         assertEquals(2, list.size());
     }
 
-    @Test
-    void getHighestBid_found() {
-        Auction auction = Auction.builder().id(1L).build();
-        Bid highest = Bid.builder().id(3L).amount(500.0).auction(auction).build();
+     @Test
+     void getHighestBid_found() {
+         Auction auction = Auction.builder().id(1L).build();
+         Bid highest = Bid.builder().id(3L).amount(500.0).auction(auction).build();
 
-        when(auctionRepository.findById(1L)).thenReturn(Optional.of(auction));
-        when(repository.findTopByAuctionOrderByAmountDesc(auction)).thenReturn(Optional.of(highest));
+         when(auctionRepository.existsById(1L)).thenReturn(true);
+         when(repository.findTopByAuctionIdOrderByAmountDesc(1L)).thenReturn(Optional.of(highest));
 
-        Optional<BidDto> result = service.getHighestBid(1L);
-        assertTrue(result.isPresent());
-        assertEquals(3L, result.get().getId());
-        assertEquals(500.0, result.get().getAmount());
-    }
+         Optional<BidDto> result = service.getHighestBid(1L);
+         assertTrue(result.isPresent());
+         assertEquals(3L, result.get().getId());
+         assertEquals(500.0, result.get().getAmount());
+     }
 
-    @Test
-    void getHighestBid_notFound() {
-        Auction auction = Auction.builder().id(1L).build();
+     @Test
+     void getHighestBid_notFound() {
+         Auction auction = Auction.builder().id(1L).build();
 
-        when(auctionRepository.findById(1L)).thenReturn(Optional.of(auction));
-        when(repository.findTopByAuctionOrderByAmountDesc(auction)).thenReturn(Optional.empty());
+         when(auctionRepository.existsById(1L)).thenReturn(true);
+         when(repository.findTopByAuctionIdOrderByAmountDesc(1L)).thenReturn(Optional.empty());
 
-        Optional<BidDto> result = service.getHighestBid(1L);
-        assertFalse(result.isPresent());
-    }
+         Optional<BidDto> result = service.getHighestBid(1L);
+         assertFalse(result.isPresent());
+     }
 }
