@@ -22,7 +22,7 @@ public class AuctionController {
     @PostMapping
     public ResponseEntity<AuctionDto> createAuction(@Validated @RequestBody AuctionDto dto) {
         AuctionDto created = auctionService.createAuction(dto);
-        return ResponseEntity.ok(created);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @GetMapping("/{id}")
