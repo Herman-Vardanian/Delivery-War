@@ -2,7 +2,7 @@ package com.delivery.auction.service;
 
 import com.delivery.auction.dto.AuctionDto;
 import com.delivery.auction.entity.Auction;
-import com.delivery.auction.entity.Status;
+import com.delivery.auction.entity.AuctionStatus;
 import com.delivery.auction.mapper.AuctionMapper;
 import com.delivery.auction.repository.AuctionRepository;
 import com.delivery.common.exception.ResourceNotFoundException;
@@ -41,7 +41,7 @@ public class AuctionServiceTest {
                 .startPrice(10.0f)
                 .startTime(LocalDateTime.of(2026, 4, 23, 10, 0))
                 .endTime(LocalDateTime.of(2026, 4, 23, 11, 0))
-                .status(Status.OPEN)
+                .status(AuctionStatus.OPEN)
                 .build();
 
         Auction savedEntity = Auction.builder()
@@ -49,7 +49,7 @@ public class AuctionServiceTest {
                 .startPrice(10.0f)
                 .startTime(dto.getStartTime())
                 .endTime(dto.getEndTime())
-                .status(Status.OPEN)
+                .status(AuctionStatus.OPEN)
                 .build();
 
         when(repository.save(any(Auction.class))).thenReturn(savedEntity);
@@ -59,13 +59,13 @@ public class AuctionServiceTest {
         assertNotNull(result);
         assertEquals(1L, result.getId());
         assertEquals(10.0f, result.getStartPrice());
-        assertEquals(Status.OPEN, result.getStatus());
+        assertEquals(AuctionStatus.OPEN, result.getStatus());
         verify(repository).save(any(Auction.class));
     }
 
     @Test
     void getAuction_found() {
-        Auction a = Auction.builder().id(2L).startPrice(20.0f).status(Status.OPEN).build();
+        Auction a = Auction.builder().id(2L).startPrice(20.0f).status(AuctionStatus.OPEN).build();
         when(repository.findById(2L)).thenReturn(Optional.of(a));
 
         AuctionDto dto = service.getAuction(2L);
@@ -100,7 +100,7 @@ public class AuctionServiceTest {
         Auction existing = Auction.builder()
                 .id(3L)
                 .startPrice(5.0f)
-                .status(Status.OPEN)
+                .status(AuctionStatus.OPEN)
                 .build();
 
         when(repository.findById(3L)).thenReturn(Optional.of(existing));
@@ -108,20 +108,20 @@ public class AuctionServiceTest {
         Auction saved = Auction.builder()
                 .id(3L)
                 .startPrice(99.9f)
-                .status(Status.CLOSED)
+                .status(AuctionStatus.CLOSED)
                 .build();
 
         when(repository.save(any(Auction.class))).thenReturn(saved);
 
         AuctionDto dto = AuctionDto.builder()
                 .startPrice(99.9f)
-                .status(Status.CLOSED)
+                .status(AuctionStatus.CLOSED)
                 .build();
 
         AuctionDto result = service.updateAuction(3L, dto);
 
         assertEquals(99.9f, result.getStartPrice());
-        assertEquals(Status.CLOSED, result.getStatus());
+        assertEquals(AuctionStatus.CLOSED, result.getStatus());
         verify(repository).save(existing);
     }
 }

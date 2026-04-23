@@ -1,6 +1,6 @@
 package com.delivery.auction.entity;
 
-public enum Status {
+public enum AuctionStatus {
     OPEN,
     PENDING,
     CLOSED
