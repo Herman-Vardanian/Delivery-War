@@ -3,23 +3,25 @@ package com.delivery.auction.mapper;
 import com.delivery.auction.dto.AuctionDto;
 import com.delivery.auction.entity.Auction;
 
+import com.delivery.deliverySlot.entity.DeliverySlotId;
 import org.springframework.stereotype.Component;
 
 
 @Component
 public class AuctionMapper {
 
-    public AuctionDto toDto(Auction s) {
-        if (s == null) {
+    public AuctionDto toDto(Auction a) {
+        if (a == null) {
             return null;
         }
 
         return AuctionDto.builder()
-                .id(s.getId())
-                .startPrice(s.getStartPrice())
-                .startTime(s.getStartTime())
-                .endTime(s.getEndTime())
-                .status(s.getStatus())
+                .id(a.getId())
+                .startPrice(a.getStartPrice())
+                .startTime(a.getStartTime())
+                .endTime(a.getEndTime())
+                .status(a.getStatus())
+                .deliverySlotId(a.getDeliverySlotId() != null ? a.getDeliverySlotId().toString() : null)
                 .build();
     }
 
@@ -34,6 +36,7 @@ public class AuctionMapper {
                 .startTime(d.getStartTime())
                 .endTime(d.getEndTime())
                 .status(d.getStatus())
+                .deliverySlotId(DeliverySlotId.builder().value(String.valueOf(d.getId())).build())
                 .build();
     }
 }

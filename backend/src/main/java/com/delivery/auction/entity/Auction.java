@@ -1,8 +1,8 @@
 package com.delivery.auction.entity;
 
+import com.delivery.deliverySlot.entity.DeliverySlotId;
 import jakarta.persistence.*;
 import lombok.*;
-
 
 import java.time.LocalDateTime;
 
@@ -27,6 +27,6 @@ public class Auction {
     @Enumerated(EnumType.STRING)
     private AuctionStatus status;
 
-    /*@Embedded
-    private Long deliverySlotId;*/
+    @Embedded
+    private DeliverySlotId deliverySlotId;
 }
