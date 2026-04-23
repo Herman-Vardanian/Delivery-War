@@ -3,9 +3,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import InscBg from '../components/InscBg';
 
 const STEPS_META = [
-  { id: 1, label: 'Magasin', desc: 'Nom, adresse, type d\'activité' },
-  { id: 2, label: 'Accès', desc: 'Email, téléphone, mot de passe' },
-  { id: 3, label: 'Plan', desc: 'Gratuit, Standard ou Pass Whale' },
+  { id: 1, label: 'Magasin',  desc: 'Nom et identifiant de connexion' },
+  { id: 2, label: 'Accès',    desc: 'Mot de passe et crédit de départ' },
+  { id: 3, label: 'Plan',     desc: 'Gratuit, Standard ou Pass Whale' },
   { id: 4, label: 'Confirmation', desc: 'Compte activé, prêt à enchérir' },
 ];
 
@@ -40,8 +40,9 @@ export default function RegisterPage() {
   const [doneSteps, setDoneSteps] = useState([]);
   const [selectedPlan, setSelectedPlan] = useState('standard');
 
-  const [s1, setS1] = useState({ name: '', id: '', type: '', address: '', zone: '', siret: '' });
-  const [s2, setS2] = useState({ firstName: '', lastName: '', email: '', phone: '', password: '', confirm: '' });
+  // Champs alignés sur l'entité Store
+  const [s1, setS1] = useState({ name: '', storeId: '' });
+  const [s2, setS2] = useState({ password: '', confirm: '', balance: '' });
 
   const goStep = (n) => {
     setDoneSteps((d) => [...new Set([...d, step])]);
@@ -52,14 +53,17 @@ export default function RegisterPage() {
   const pct = [25, 50, 75, 100][step - 1];
 
   const planClass = (p) => {
-    if (p === 'free' && selectedPlan === 'free') return 'plan-card-insc sel-free';
-    if (p === 'standard' && selectedPlan === 'standard') return 'plan-card-insc sel-standard';
-    if (p === 'whale' && selectedPlan === 'whale') return 'plan-card-insc sel-whale';
+    if (p === selectedPlan) {
+      if (p === 'free')     return 'plan-card-insc sel-free';
+      if (p === 'standard') return 'plan-card-insc sel-standard';
+      if (p === 'whale')    return 'plan-card-insc sel-whale';
+    }
     return 'plan-card-insc';
   };
 
-  const planConfirm = { free: 'Gratuit — 0 €/mois', standard: 'Standard — 49 €/mois', whale: 'Pass Whale — 199 €/mois' };
-  const planColor   = { free: 'var(--c-success)', standard: 'var(--c-pri)', whale: 'var(--c-whale-s)' };
+  const whalePass     = selectedPlan === 'whale';
+  const planConfirm   = { free: 'Gratuit — 0 €/mois', standard: 'Standard — 49 €/mois', whale: 'Pass Whale — 199 €/mois' };
+  const planColor     = { free: 'var(--c-success)', standard: 'var(--c-pri)', whale: 'var(--c-whale-s)' };
 
   const dotClass = (id) => {
     if (doneSteps.includes(id)) return 'step-dot done';
@@ -140,7 +144,7 @@ export default function RegisterPage() {
 
             <div className="form-body">
 
-              {/* ── STEP 1 ── */}
+              {/* ── STEP 1 — Magasin ── */}
               <div className={`step-panel ${step === 1 ? 'active' : ''}`}>
                 <div className="form-eyebrow-insc">Étape 1</div>
                 <div className="form-title-insc">Votre magasin</div>
@@ -148,120 +152,74 @@ export default function RegisterPage() {
                 <div className="field-insc">
                   <label className="field-label-insc">Nom du magasin <span className="req">*</span></label>
                   <div className="field-wrap-insc">
-                    <input className="field-input-insc" type="text" placeholder="Ex. Boulangerie Dupont" value={s1.name} onChange={(e) => setS1({ ...s1, name: e.target.value })} />
-                    <FieldIcon><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></FieldIcon>
-                  </div>
-                </div>
-
-                <div className="field-row">
-                  <div className="field-insc">
-                    <label className="field-label-insc">Identifiant <span className="req">*</span></label>
-                    <div className="field-wrap-insc">
-                      <input className="field-input-insc" type="text" placeholder="PARIS-NORD-07" value={s1.id} onChange={(e) => setS1({ ...s1, id: e.target.value })} />
-                      <FieldIcon><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg></FieldIcon>
-                    </div>
-                    <div className="field-hint">Utilisé pour la connexion</div>
-                  </div>
-                  <div className="field-insc">
-                    <label className="field-label-insc">Type d&apos;activité <span className="req">*</span></label>
-                    <div className="field-wrap-insc">
-                      <select className="field-select-insc" value={s1.type} onChange={(e) => setS1({ ...s1, type: e.target.value })}>
-                        <option value="" disabled>Choisir...</option>
-                        <option>Alimentation générale</option>
-                        <option>Boulangerie / Pâtisserie</option>
-                        <option>Boucherie / Charcuterie</option>
-                        <option>Épicerie fine</option>
-                        <option>Traiteur / Restauration</option>
-                        <option>Caviste / Boissons</option>
-                        <option>Librairie / Papeterie</option>
-                        <option>Autre commerce</option>
-                      </select>
-                      <FieldIcon><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></FieldIcon>
-                    </div>
+                    <input
+                      className="field-input-insc"
+                      type="text"
+                      placeholder="Ex. Boulangerie Dupont"
+                      value={s1.name}
+                      onChange={(e) => setS1({ ...s1, name: e.target.value })}
+                    />
+                    <FieldIcon>
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                        <polyline points="9 22 9 12 15 12 15 22"/>
+                      </svg>
+                    </FieldIcon>
                   </div>
                 </div>
 
                 <div className="field-insc">
-                  <label className="field-label-insc">Adresse <span className="req">*</span></label>
+                  <label className="field-label-insc">Identifiant de connexion <span className="req">*</span></label>
                   <div className="field-wrap-insc">
-                    <input className="field-input-insc" type="text" placeholder="12 rue de la Paix, 75001 Paris" value={s1.address} onChange={(e) => setS1({ ...s1, address: e.target.value })} />
-                    <FieldIcon><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></FieldIcon>
+                    <input
+                      className="field-input-insc"
+                      type="text"
+                      placeholder="Ex. PARIS-NORD-07"
+                      value={s1.storeId}
+                      onChange={(e) => setS1({ ...s1, storeId: e.target.value.toUpperCase() })}
+                    />
+                    <FieldIcon>
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                        <rect x="2" y="7" width="20" height="14" rx="2"/>
+                        <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
+                      </svg>
+                    </FieldIcon>
                   </div>
-                </div>
-
-                <div className="field-row">
-                  <div className="field-insc">
-                    <label className="field-label-insc">Zone de livraison</label>
-                    <div className="field-wrap-insc">
-                      <select className="field-select-insc" value={s1.zone} onChange={(e) => setS1({ ...s1, zone: e.target.value })}>
-                        <option value="" disabled>Zone...</option>
-                        <option>Zone Nord</option><option>Zone Sud</option><option>Zone Est</option><option>Zone Ouest</option><option>Zone Centre</option>
-                      </select>
-                      <FieldIcon><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg></FieldIcon>
-                    </div>
-                  </div>
-                  <div className="field-insc">
-                    <label className="field-label-insc">SIRET</label>
-                    <div className="field-wrap-insc">
-                      <input className="field-input-insc" type="text" placeholder="123 456 789 00012" value={s1.siret} onChange={(e) => setS1({ ...s1, siret: e.target.value })} />
-                      <FieldIcon><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></FieldIcon>
-                    </div>
-                  </div>
+                  <div className="field-hint">Utilisé pour la connexion. Majuscules recommandées.</div>
                 </div>
 
                 <div className="form-footer">
-                  <span style={{ fontSize: '0.68rem', color: 'var(--c-text3)' }}>Déjà inscrit ? <Link to="/login" style={{ color: 'var(--c-pri)', textDecoration: 'none' }}>Connexion</Link></span>
-                  <button className="btn-insc btn-primary-insc" onClick={() => goStep(2)}>Continuer <span>→</span></button>
+                  <span style={{ fontSize: '0.68rem', color: 'var(--c-text3)' }}>
+                    Déjà inscrit ?{' '}
+                    <Link to="/login" style={{ color: 'var(--c-pri)', textDecoration: 'none' }}>Connexion</Link>
+                  </span>
+                  <button className="btn-insc btn-primary-insc" onClick={() => goStep(2)}>
+                    Continuer <span>→</span>
+                  </button>
                 </div>
               </div>
 
-              {/* ── STEP 2 ── */}
+              {/* ── STEP 2 — Accès & Finances ── */}
               <div className={`step-panel ${step === 2 ? 'active' : ''}`}>
                 <div className="form-eyebrow-insc">Étape 2</div>
-                <div className="form-title-insc">Contact &amp; Accès</div>
-
-                <div className="field-row">
-                  <div className="field-insc">
-                    <label className="field-label-insc">Prénom <span className="req">*</span></label>
-                    <div className="field-wrap-insc">
-                      <input className="field-input-insc" type="text" placeholder="Jean" value={s2.firstName} onChange={(e) => setS2({ ...s2, firstName: e.target.value })} />
-                      <FieldIcon><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></FieldIcon>
-                    </div>
-                  </div>
-                  <div className="field-insc">
-                    <label className="field-label-insc">Nom <span className="req">*</span></label>
-                    <div className="field-wrap-insc">
-                      <input className="field-input-insc" type="text" placeholder="Dupont" value={s2.lastName} onChange={(e) => setS2({ ...s2, lastName: e.target.value })} />
-                      <FieldIcon><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></FieldIcon>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="field-insc">
-                  <label className="field-label-insc">Adresse email <span className="req">*</span></label>
-                  <div className="field-wrap-insc">
-                    <input
-                      className={`field-input-insc ${s2.email.length > 0 ? (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s2.email) ? 'valid' : 'error') : ''}`}
-                      type="email" placeholder="jean.dupont@boulangerie.fr"
-                      value={s2.email} onChange={(e) => setS2({ ...s2, email: e.target.value })}
-                    />
-                    <FieldIcon><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></FieldIcon>
-                  </div>
-                </div>
-
-                <div className="field-insc">
-                  <label className="field-label-insc">Téléphone</label>
-                  <div className="field-wrap-insc">
-                    <input className="field-input-insc" type="tel" placeholder="+33 6 12 34 56 78" value={s2.phone} onChange={(e) => setS2({ ...s2, phone: e.target.value })} />
-                    <FieldIcon><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2.22h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6.08 6.08l.95-.95a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7a2 2 0 0 1 1.72 2.02z"/></svg></FieldIcon>
-                  </div>
-                </div>
+                <div className="form-title-insc">Accès &amp; Finances</div>
 
                 <div className="field-insc">
                   <label className="field-label-insc">Mot de passe <span className="req">*</span></label>
                   <div className="field-wrap-insc">
-                    <input className="field-input-insc" type="password" placeholder="Min. 8 caractères" value={s2.password} onChange={(e) => setS2({ ...s2, password: e.target.value })} />
-                    <FieldIcon><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></FieldIcon>
+                    <input
+                      className="field-input-insc"
+                      type="password"
+                      placeholder="Min. 8 caractères"
+                      value={s2.password}
+                      onChange={(e) => setS2({ ...s2, password: e.target.value })}
+                    />
+                    <FieldIcon>
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                        <rect x="3" y="11" width="18" height="11" rx="2"/>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                      </svg>
+                    </FieldIcon>
                   </div>
                   <PwdStrength value={s2.password} />
                 </div>
@@ -269,9 +227,41 @@ export default function RegisterPage() {
                 <div className="field-insc">
                   <label className="field-label-insc">Confirmer le mot de passe <span className="req">*</span></label>
                   <div className="field-wrap-insc">
-                    <input className="field-input-insc" type="password" placeholder="••••••••" value={s2.confirm} onChange={(e) => setS2({ ...s2, confirm: e.target.value })} />
-                    <FieldIcon><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></FieldIcon>
+                    <input
+                      className={`field-input-insc ${s2.confirm.length > 0 ? (s2.confirm === s2.password ? 'valid' : 'error') : ''}`}
+                      type="password"
+                      placeholder="••••••••"
+                      value={s2.confirm}
+                      onChange={(e) => setS2({ ...s2, confirm: e.target.value })}
+                    />
+                    <FieldIcon>
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                        <rect x="3" y="11" width="18" height="11" rx="2"/>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                      </svg>
+                    </FieldIcon>
                   </div>
+                </div>
+
+                <div className="field-insc">
+                  <label className="field-label-insc">Crédit de départ (€) <span className="req">*</span></label>
+                  <div className="field-wrap-insc">
+                    <input
+                      className="field-input-insc"
+                      type="number"
+                      min="0"
+                      placeholder="Ex. 500"
+                      value={s2.balance}
+                      onChange={(e) => setS2({ ...s2, balance: e.target.value })}
+                    />
+                    <FieldIcon>
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                        <line x1="12" y1="1" x2="12" y2="23"/>
+                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                      </svg>
+                    </FieldIcon>
+                  </div>
+                  <div className="field-hint">Solde initial disponible pour enchérir.</div>
                 </div>
 
                 <div className="form-footer">
@@ -280,7 +270,7 @@ export default function RegisterPage() {
                 </div>
               </div>
 
-              {/* ── STEP 3 ── */}
+              {/* ── STEP 3 — Plan ── */}
               <div className={`step-panel ${step === 3 ? 'active' : ''}`}>
                 <div className="form-eyebrow-insc">Étape 3</div>
                 <div className="form-title-insc">Choisir votre plan</div>
@@ -329,7 +319,7 @@ export default function RegisterPage() {
                 </div>
               </div>
 
-              {/* ── STEP 4 — Success ── */}
+              {/* ── STEP 4 — Confirmation ── */}
               <div className={`step-panel ${step === 4 ? 'active' : ''}`}>
                 <div className="success-screen">
                   <div className="success-icon">🎉</div>
@@ -339,23 +329,43 @@ export default function RegisterPage() {
                   <div className="success-details">
                     <div className="sd-row">
                       <span className="sd-key">Identifiant</span>
-                      <span className="sd-val">{s1.id || 'MON-MAGASIN'}</span>
+                      <span className="sd-val">{s1.storeId || 'MON-MAGASIN'}</span>
                     </div>
                     <div className="sd-row">
                       <span className="sd-key">Magasin</span>
                       <span className="sd-val">{s1.name || 'Votre Magasin'}</span>
                     </div>
                     <div className="sd-row">
+                      <span className="sd-key">Solde initial</span>
+                      <span className="sd-val" style={{ color: 'var(--c-success)' }}>
+                        {s2.balance ? `${Number(s2.balance).toLocaleString('fr-FR')} €` : '0 €'}
+                      </span>
+                    </div>
+                    <div className="sd-row">
                       <span className="sd-key">Plan</span>
                       <span className="sd-val" style={{ color: planColor[selectedPlan] }}>{planConfirm[selectedPlan]}</span>
                     </div>
                     <div className="sd-row">
+                      <span className="sd-key">Pass Whale</span>
+                      <span className="sd-val" style={{ color: whalePass ? 'var(--c-whale-s)' : 'var(--c-text3)' }}>
+                        {whalePass ? '🐋 Actif' : '—'}
+                      </span>
+                    </div>
+                    <div className="sd-row">
+                      <span className="sd-key">Rôle</span>
+                      <span className="sd-val">STORE</span>
+                    </div>
+                    <div className="sd-row">
                       <span className="sd-key">Statut</span>
-                      <span className="sd-val" style={{ color: 'var(--c-success)' }}>✓ Actif — Essai 14 jours</span>
+                      <span className="sd-val" style={{ color: 'var(--c-success)' }}>✓ Actif</span>
                     </div>
                   </div>
 
-                  <button className="btn-insc btn-success-insc" style={{ width: '100%', justifyContent: 'center' }} onClick={() => navigate('/login')}>
+                  <button
+                    className="btn-insc btn-success-insc"
+                    style={{ width: '100%', justifyContent: 'center' }}
+                    onClick={() => navigate('/login')}
+                  >
                     Accéder à la plateforme →
                   </button>
                 </div>

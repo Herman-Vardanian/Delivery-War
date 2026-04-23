@@ -175,31 +175,11 @@ export default function IndexPage() {
             <div className="plan-period">Pour toujours</div>
             <div className="plan-divider" />
             <ul className="plan-features-list">
-              <li><span className="pf-check green">✓</span> Accès aux enchères standard</li>
-              <li><span className="pf-check green">✓</span> Petit camion uniquement</li>
               <li><span className="pf-check green">✓</span> File Tortue si enchère perdue</li>
-              <li><span className="pf-check muted">✗</span> <span className="pf-muted">Pas de grand camion</span></li>
               <li><span className="pf-check muted">✗</span> <span className="pf-muted">Créneaux VIP inaccessibles</span></li>
               <li><span className="pf-check muted">✗</span> <span className="pf-muted">Pas de priorité file</span></li>
             </ul>
             <Link className="btn-plan btn-plan-ghost" to="/register">Commencer gratuitement</Link>
-          </div>
-          <div className="plan-card-landing featured">
-            <div className="plan-badge-top">⭐ Recommandé</div>
-            <span className="plan-icon" style={{ marginTop: '1.25rem' }}>🚛</span>
-            <div className="plan-name-lg" style={{ color: 'var(--c-pri)' }}>Standard</div>
-            <div className="plan-price-lg" style={{ color: 'var(--c-pri)' }}>49 €</div>
-            <div className="plan-period">/ mois · Essai 14 jours gratuits</div>
-            <div className="plan-divider" />
-            <ul className="plan-features-list">
-              <li><span className="pf-check orange">✓</span> Tous les créneaux disponibles</li>
-              <li><span className="pf-check orange">✓</span> Grand et petit camion</li>
-              <li><span className="pf-check orange">✓</span> Priorité sur la file Tortue</li>
-              <li><span className="pf-check orange">✓</span> Notifications avancées</li>
-              <li><span className="pf-check orange">✓</span> Historique et statistiques</li>
-              <li><span className="pf-check muted">✗</span> <span className="pf-muted">Créneaux Whale exclus</span></li>
-            </ul>
-            <Link className="btn-plan btn-plan-orange" to="/register">Essayer 14 jours →</Link>
           </div>
           <div className="plan-card-landing whale-plan">
             <div className="plan-badge-top whale">🐋 VIP</div>
@@ -211,7 +191,6 @@ export default function IndexPage() {
             <ul className="plan-features-list">
               <li><span className="pf-check whale">✓</span> Tout le plan Standard</li>
               <li><span className="pf-check whale">✓</span> Créneaux exclusifs VIP</li>
-              <li><span className="pf-check whale">✓</span> Jamais en file Tortue</li>
               <li><span className="pf-check whale">✓</span> Camion prioritaire garanti</li>
               <li><span className="pf-check whale">✓</span> Dashboard avancé temps réel</li>
               <li><span className="pf-check whale">✓</span> Support dédié 24/7</li>
