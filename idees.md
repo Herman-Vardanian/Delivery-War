@@ -1,0 +1,7 @@
+- Prix départ -> ne peut que augmenter de pourcent en pourcent
+- Enchère stagne : marge baissée jusqu'à un minimum
+- Limite de temps pour enchérir
+- Si bid avant limite de temps -> augmentation du temps
+- Marketing ultra agressif -> notifications
+- Prix minimum -> prix des transporteur
+- Les transporteurs sont payés en pourcentage du bid gagnant
