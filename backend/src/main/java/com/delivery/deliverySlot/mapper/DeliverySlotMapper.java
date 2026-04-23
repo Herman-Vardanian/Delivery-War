@@ -13,7 +13,7 @@ public class DeliverySlotMapper {
             return null;
         }
         return DeliverySlotDto.builder()
-                .id(Long.parseLong(entity.getId().getValue()))
+                .id(Long.parseLong(entity.getId().getVal()))
                 .startTime(entity.getStartTime())
                 .endTime(entity.getEndTime())
                 .capacity(entity.getCapacity())
@@ -26,7 +26,7 @@ public class DeliverySlotMapper {
             return null;
         }
         return DeliverySlot.builder()
-                .id(DeliverySlotId.builder().value(String.valueOf(dto.getId())).build())
+                .id(DeliverySlotId.builder().val(String.valueOf(dto.getId())).build())
                 .startTime(dto.getStartTime())
                 .endTime(dto.getEndTime())
                 .capacity(dto.getCapacity())

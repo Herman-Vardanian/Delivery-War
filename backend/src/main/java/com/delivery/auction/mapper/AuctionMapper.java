@@ -36,7 +36,7 @@ public class AuctionMapper {
                 .startTime(d.getStartTime())
                 .endTime(d.getEndTime())
                 .status(d.getStatus())
-                .deliverySlotId(DeliverySlotId.builder().value(String.valueOf(d.getId())).build())
+                .deliverySlotId(DeliverySlotId.builder().val(String.valueOf(d.getId())).build())
                 .build();
     }
 }
