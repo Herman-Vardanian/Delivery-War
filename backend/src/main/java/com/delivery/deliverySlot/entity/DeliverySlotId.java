@@ -16,5 +16,5 @@ import lombok.NoArgsConstructor;
 public class DeliverySlotId implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private String value;
+    private String val;
 }

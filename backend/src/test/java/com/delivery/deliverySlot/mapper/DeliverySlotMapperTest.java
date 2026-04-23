@@ -28,7 +28,7 @@ public class DeliverySlotMapperTest {
     void toDto_mapsAllFields() {
         DeliverySlot entity = DeliverySlot.builder()
                 .technicalId(42L)
-                .id(DeliverySlotId.builder().value("1").build())
+                .id(DeliverySlotId.builder().val("1").build())
                 .startTime(START)
                 .endTime(END)
                 .capacity(10)
@@ -48,7 +48,7 @@ public class DeliverySlotMapperTest {
     @Test
     void toDto_statusPending() {
         DeliverySlot entity = DeliverySlot.builder()
-                .id(DeliverySlotId.builder().value("2").build())
+                .id(DeliverySlotId.builder().val("2").build())
                 .startTime(START)
                 .endTime(END)
                 .capacity(5)
@@ -63,7 +63,7 @@ public class DeliverySlotMapperTest {
     @Test
     void toDto_statusClosed() {
         DeliverySlot entity = DeliverySlot.builder()
-                .id(DeliverySlotId.builder().value("3").build())
+                .id(DeliverySlotId.builder().val("3").build())
                 .startTime(START)
                 .endTime(END)
                 .capacity(0)
@@ -95,7 +95,7 @@ public class DeliverySlotMapperTest {
         DeliverySlot entity = mapper.toEntity(dto);
 
         assertNotNull(entity);
-        assertEquals("7", entity.getId().getValue());
+        assertEquals("7", entity.getId().getVal());
         assertEquals(START, entity.getStartTime());
         assertEquals(END, entity.getEndTime());
         assertEquals(20, entity.getCapacity());

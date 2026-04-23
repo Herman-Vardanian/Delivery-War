@@ -45,7 +45,7 @@ public class DeliverySlotServiceTest {
     void findAll_returnsAllSlots() {
         DeliverySlot slot1 = DeliverySlot.builder()
                 .technicalId(1L)
-                .id(DeliverySlotId.builder().value("1").build())
+                .id(DeliverySlotId.builder().val("1").build())
                 .startTime(START)
                 .endTime(END)
                 .capacity(10)
@@ -54,7 +54,7 @@ public class DeliverySlotServiceTest {
 
         DeliverySlot slot2 = DeliverySlot.builder()
                 .technicalId(2L)
-                .id(DeliverySlotId.builder().value("2").build())
+                .id(DeliverySlotId.builder().val("2").build())
                 .startTime(START)
                 .endTime(END)
                 .capacity(5)
@@ -88,7 +88,7 @@ public class DeliverySlotServiceTest {
     void findById_found_returnsDto() {
         DeliverySlot slot = DeliverySlot.builder()
                 .technicalId(1L)
-                .id(DeliverySlotId.builder().value("1").build())
+                .id(DeliverySlotId.builder().val("1").build())
                 .startTime(START)
                 .endTime(END)
                 .capacity(10)
@@ -130,7 +130,7 @@ public class DeliverySlotServiceTest {
 
         DeliverySlot savedEntity = DeliverySlot.builder()
                 .technicalId(10L)
-                .id(DeliverySlotId.builder().value("1").build())
+                .id(DeliverySlotId.builder().val("1").build())
                 .startTime(START)
                 .endTime(END)
                 .capacity(8)
@@ -160,7 +160,7 @@ public class DeliverySlotServiceTest {
 
         DeliverySlot savedEntity = DeliverySlot.builder()
                 .technicalId(20L)
-                .id(DeliverySlotId.builder().value("2").build())
+                .id(DeliverySlotId.builder().val("2").build())
                 .startTime(START)
                 .endTime(END)
                 .capacity(3)

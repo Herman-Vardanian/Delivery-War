@@ -22,7 +22,7 @@ public class DeliveryMapperTest {
                 .build();
 
         DeliverySlot deliverySlot = DeliverySlot.builder()
-                .id(DeliverySlotId.builder().value("1").build())
+                .id(DeliverySlotId.builder().val("1").build())
                 .build();
 
         Delivery delivery = Delivery.builder()
@@ -42,7 +42,7 @@ public class DeliveryMapperTest {
         assertEquals(delivery.getDeliveryCompany(), dto.getDeliveryCompany());
         assertEquals(delivery.getStore().getId(), dto.getStoreId());
         assertEquals(delivery.getStore().getName(), dto.getStoreName());
-        assertEquals(Long.valueOf(delivery.getDeliverySlot().getId().getValue()), dto.getDeliverySlotId());
+        assertEquals(Long.valueOf(delivery.getDeliverySlot().getId().getVal()), dto.getDeliverySlotId());
 
         Delivery converted = mapper.toEntity(dto);
         assertNotNull(converted);
@@ -99,7 +99,7 @@ public class DeliveryMapperTest {
     @Test
     void toDtoList_convertsAll() {
         Store store = Store.builder().id(1L).name("Store1").build();
-        DeliverySlot deliverySlot = DeliverySlot.builder().id(DeliverySlotId.builder().value("1").build()).build();
+        DeliverySlot deliverySlot = DeliverySlot.builder().id(DeliverySlotId.builder().val("1").build()).build();
 
         Delivery delivery1 = Delivery.builder()
                 .id(1L)
@@ -146,7 +146,7 @@ public class DeliveryMapperTest {
     @Test
     void toDto_withAllStatuses() {
         Store store = Store.builder().id(1L).name("TestStore").build();
-        DeliverySlot deliverySlot = DeliverySlot.builder().id(DeliverySlotId.builder().value("1").build()).build();
+        DeliverySlot deliverySlot = DeliverySlot.builder().id(DeliverySlotId.builder().val("1").build()).build();
 
         Delivery pendingDelivery = Delivery.builder()
                 .id(1L)

@@ -2,8 +2,6 @@ package com.delivery.common.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -58,24 +56,6 @@ public class GlobalExceptionHandler {
                 HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler(AuthenticationCredentialsNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleAuthenticationRequired(
-            AuthenticationCredentialsNotFoundException ex,
-            HttpServletRequest request) {
-        return new ResponseEntity<>(
-                buildBody(HttpStatus.UNAUTHORIZED, "Unauthorized",
-                        "Authentification requise pour accéder à cette ressource", request.getRequestURI()),
-                HttpStatus.UNAUTHORIZED);
-    }
-
-    @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<Map<String, Object>> handleAccessDenied(AccessDeniedException ex,
-            HttpServletRequest request) {
-        return new ResponseEntity<>(
-                buildBody(HttpStatus.FORBIDDEN, "Forbidden",
-                        "Accès refusé : rôle insuffisant pour cette ressource", request.getRequestURI()),
-                HttpStatus.FORBIDDEN);
-    }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGlobalException(Exception ex,
