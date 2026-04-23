@@ -6,6 +6,8 @@ import com.delivery.auction.entity.Auction;
 import com.delivery.deliverySlot.entity.DeliverySlotId;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
+
 
 @Component
 public class AuctionMapper {
@@ -18,8 +20,8 @@ public class AuctionMapper {
         return AuctionDto.builder()
                 .id(a.getId())
                 .startPrice(a.getStartPrice())
-                .startTime(a.getStartTime())
-                .endTime(a.getEndTime())
+                .startTime(a.getStartTime().toString())
+                .endTime(a.getEndTime().toString())
                 .status(a.getStatus())
                 .deliverySlotId(a.getDeliverySlotId() != null ? a.getDeliverySlotId().toString() : null)
                 .build();
@@ -33,8 +35,8 @@ public class AuctionMapper {
         return Auction.builder()
                 .id(d.getId())
                 .startPrice(d.getStartPrice())
-                .startTime(d.getStartTime())
-                .endTime(d.getEndTime())
+                .startTime(LocalDateTime.parse(d.getStartTime()))
+                .endTime(LocalDateTime.parse(d.getEndTime()))
                 .status(d.getStatus())
                 .deliverySlotId(DeliverySlotId.builder().val(String.valueOf(d.getId())).build())
                 .build();
