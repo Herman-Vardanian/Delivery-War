@@ -31,7 +31,7 @@ public class StoreService {
             throw new IllegalArgumentException("Le champ 'name' est requis.");
         }
         if (repository.findByName(s.getName()).isPresent()) {
-            throw new IllegalArgumentException("Un store existe déjà avec ce name.");
+            throw new IllegalArgumentException("Un store existe déjà avec ce nom.");
         }
         s.setRole(com.delivery.store.entity.Role.STORE);
         s.setBalance(BigDecimal.ZERO);
