@@ -42,23 +42,29 @@ export default function InscBg() {
       </div>
 
       <div className="trucks-layer">
+        {/* truck-move = gauche→droite → flip */}
         <svg className="truck" style={{ top: '12%', animation: 'truck-move 10s linear infinite', opacity: 0.5 }} width="150" height="56" viewBox="0 0 150 56" fill="none">
-          <rect x="26" y="7" width="104" height="34" rx="3" fill="#1A2438" stroke="#FF8C00" strokeWidth="0.8" strokeOpacity="0.5"/>
-          <rect x="6" y="15" width="26" height="26" rx="2" fill="#0D1B3E" stroke="#2A3F63" strokeWidth="0.8"/>
-          <rect x="9" y="18" width="14" height="10" rx="1" fill="#29B6F6" opacity="0.6"/>
-          <circle cx="46" cy="47" r="8" fill="#0C1020" stroke="#FF8C00" strokeWidth="1.2"/>
-          <circle cx="46" cy="47" r="3.5" fill="#1A2438"/>
-          <circle cx="114" cy="47" r="8" fill="#0C1020" stroke="#FF8C00" strokeWidth="1.2"/>
-          <circle cx="114" cy="47" r="3.5" fill="#1A2438"/>
-          <text x="78" y="30" fontFamily="'Barlow Condensed',sans-serif" fontSize="9" fontWeight="900" fill="#FF8C00" letterSpacing="1" textAnchor="middle">DW</text>
+          <g transform="translate(150,0) scale(-1,1)">
+            <rect x="26" y="7" width="104" height="34" rx="3" fill="#1A2438" stroke="#FF8C00" strokeWidth="0.8" strokeOpacity="0.5"/>
+            <rect x="6" y="15" width="26" height="26" rx="2" fill="#0D1B3E" stroke="#2A3F63" strokeWidth="0.8"/>
+            <rect x="9" y="18" width="14" height="10" rx="1" fill="#29B6F6" opacity="0.6"/>
+            <circle cx="46" cy="47" r="8" fill="#0C1020" stroke="#FF8C00" strokeWidth="1.2"/>
+            <circle cx="46" cy="47" r="3.5" fill="#1A2438"/>
+            <circle cx="114" cy="47" r="8" fill="#0C1020" stroke="#FF8C00" strokeWidth="1.2"/>
+            <circle cx="114" cy="47" r="3.5" fill="#1A2438"/>
+            <text x="78" y="30" fontFamily="'Barlow Condensed',sans-serif" fontSize="9" fontWeight="900" fill="#FF8C00" letterSpacing="1" textAnchor="middle">DW</text>
+          </g>
         </svg>
         <svg className="truck" style={{ top: '55%', animation: 'truck-move 14s linear infinite', animationDelay: '-5s', opacity: 0.35 }} width="120" height="48" viewBox="0 0 120 48" fill="none">
-          <rect x="22" y="5" width="82" height="32" rx="2" fill="#0D1B3E" stroke="#162554" strokeWidth="0.8"/>
-          <rect x="5" y="12" width="22" height="25" rx="2" fill="#080C18" stroke="#1E3370" strokeWidth="0.8"/>
-          <rect x="8" y="15" width="12" height="9" rx="1" fill="#29B6F6" opacity="0.5"/>
-          <circle cx="36" cy="41" r="6" fill="#080C18" stroke="#2A3F63" strokeWidth="1"/>
-          <circle cx="92" cy="41" r="6" fill="#080C18" stroke="#2A3F63" strokeWidth="1"/>
+          <g transform="translate(120,0) scale(-1,1)">
+            <rect x="22" y="5" width="82" height="32" rx="2" fill="#0D1B3E" stroke="#162554" strokeWidth="0.8"/>
+            <rect x="5" y="12" width="22" height="25" rx="2" fill="#080C18" stroke="#1E3370" strokeWidth="0.8"/>
+            <rect x="8" y="15" width="12" height="9" rx="1" fill="#29B6F6" opacity="0.5"/>
+            <circle cx="36" cy="41" r="6" fill="#080C18" stroke="#2A3F63" strokeWidth="1"/>
+            <circle cx="92" cy="41" r="6" fill="#080C18" stroke="#2A3F63" strokeWidth="1"/>
+          </g>
         </svg>
+        {/* truck-move-reverse = droite→gauche → cab à gauche, sens correct, pas de flip */}
         <svg className="truck" style={{ top: '82%', animation: 'truck-move-reverse 9s linear infinite', animationDelay: '-3s', opacity: 0.3 }} width="100" height="42" viewBox="0 0 100 42" fill="none">
           <rect x="18" y="5" width="66" height="27" rx="2" fill="#111827" stroke="#1F2D47" strokeWidth="0.7"/>
           <rect x="4" y="10" width="20" height="22" rx="2" fill="#0C1020"/>

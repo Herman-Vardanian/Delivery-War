@@ -56,32 +56,40 @@ export default function AuthBg() {
       </div>
 
       <div className="trucks-layer">
+        {/* truck-move = gauche→droite → flip */}
         <svg className="truck truck-1" width="160" height="60" viewBox="0 0 160 60" fill="none">
-          <rect x="30" y="8" width="110" height="38" rx="3" fill="#1A2438" stroke="#FF8C00" strokeWidth="1" strokeOpacity="0.6"/>
-          <rect x="8" y="18" width="28" height="28" rx="2" fill="#0D1B3E" stroke="#2A3F63" strokeWidth="1"/>
-          <rect x="12" y="22" width="14" height="10" rx="1" fill="#29B6F6" opacity="0.7"/>
-          <circle cx="50" cy="50" r="9" fill="#0C1020" stroke="#FF8C00" strokeWidth="1.5"/>
-          <circle cx="50" cy="50" r="4" fill="#1A2438"/>
-          <circle cx="120" cy="50" r="9" fill="#0C1020" stroke="#FF8C00" strokeWidth="1.5"/>
-          <circle cx="120" cy="50" r="4" fill="#1A2438"/>
-          <text x="75" y="32" fontFamily="'Barlow Condensed',sans-serif" fontSize="10" fontWeight="900" fill="#FF8C00" letterSpacing="1" textAnchor="middle">DW</text>
+          <g transform="translate(160,0) scale(-1,1)">
+            <rect x="30" y="8" width="110" height="38" rx="3" fill="#1A2438" stroke="#FF8C00" strokeWidth="1" strokeOpacity="0.6"/>
+            <rect x="8" y="18" width="28" height="28" rx="2" fill="#0D1B3E" stroke="#2A3F63" strokeWidth="1"/>
+            <rect x="12" y="22" width="14" height="10" rx="1" fill="#29B6F6" opacity="0.7"/>
+            <circle cx="50" cy="50" r="9" fill="#0C1020" stroke="#FF8C00" strokeWidth="1.5"/>
+            <circle cx="50" cy="50" r="4" fill="#1A2438"/>
+            <circle cx="120" cy="50" r="9" fill="#0C1020" stroke="#FF8C00" strokeWidth="1.5"/>
+            <circle cx="120" cy="50" r="4" fill="#1A2438"/>
+            <text x="75" y="32" fontFamily="'Barlow Condensed',sans-serif" fontSize="10" fontWeight="900" fill="#FF8C00" letterSpacing="1" textAnchor="middle">DW</text>
+          </g>
         </svg>
         <svg className="truck truck-2" width="130" height="52" viewBox="0 0 130 52" fill="none">
-          <rect x="24" y="6" width="88" height="34" rx="3" fill="#0D1B3E" stroke="#1E3370" strokeWidth="1"/>
-          <rect x="6" y="14" width="24" height="26" rx="2" fill="#080C18" stroke="#162554" strokeWidth="1"/>
-          <rect x="9" y="17" width="12" height="9" rx="1" fill="#29B6F6" opacity="0.5"/>
-          <circle cx="40" cy="44" r="7" fill="#080C18" stroke="#2A3F63" strokeWidth="1.5"/>
-          <circle cx="40" cy="44" r="3" fill="#111827"/>
-          <circle cx="98" cy="44" r="7" fill="#080C18" stroke="#2A3F63" strokeWidth="1.5"/>
-          <circle cx="98" cy="44" r="3" fill="#111827"/>
+          <g transform="translate(130,0) scale(-1,1)">
+            <rect x="24" y="6" width="88" height="34" rx="3" fill="#0D1B3E" stroke="#1E3370" strokeWidth="1"/>
+            <rect x="6" y="14" width="24" height="26" rx="2" fill="#080C18" stroke="#162554" strokeWidth="1"/>
+            <rect x="9" y="17" width="12" height="9" rx="1" fill="#29B6F6" opacity="0.5"/>
+            <circle cx="40" cy="44" r="7" fill="#080C18" stroke="#2A3F63" strokeWidth="1.5"/>
+            <circle cx="40" cy="44" r="3" fill="#111827"/>
+            <circle cx="98" cy="44" r="7" fill="#080C18" stroke="#2A3F63" strokeWidth="1.5"/>
+            <circle cx="98" cy="44" r="3" fill="#111827"/>
+          </g>
         </svg>
         <svg className="truck truck-3" width="100" height="44" viewBox="0 0 100 44" fill="none">
-          <rect x="18" y="5" width="66" height="28" rx="2" fill="#111827" stroke="#1F2D47" strokeWidth="1"/>
-          <rect x="4" y="11" width="20" height="22" rx="2" fill="#0C1020"/>
-          <rect x="7" y="14" width="10" height="8" rx="1" fill="#29B6F6" opacity="0.4"/>
-          <circle cx="30" cy="37" r="6" fill="#080C18" stroke="#1F2D47" strokeWidth="1"/>
-          <circle cx="74" cy="37" r="6" fill="#080C18" stroke="#1F2D47" strokeWidth="1"/>
+          <g transform="translate(100,0) scale(-1,1)">
+            <rect x="18" y="5" width="66" height="28" rx="2" fill="#111827" stroke="#1F2D47" strokeWidth="1"/>
+            <rect x="4" y="11" width="20" height="22" rx="2" fill="#0C1020"/>
+            <rect x="7" y="14" width="10" height="8" rx="1" fill="#29B6F6" opacity="0.4"/>
+            <circle cx="30" cy="37" r="6" fill="#080C18" stroke="#1F2D47" strokeWidth="1"/>
+            <circle cx="74" cy="37" r="6" fill="#080C18" stroke="#1F2D47" strokeWidth="1"/>
+          </g>
         </svg>
+        {/* truck-move-reverse = droite→gauche → cab à gauche, sens correct, pas de flip */}
         <svg className="truck truck-4" width="150" height="58" viewBox="0 0 150 58" fill="none">
           <rect x="28" y="7" width="104" height="36" rx="3" fill="#0D1B3E" stroke="#162554" strokeWidth="1"/>
           <rect x="6" y="16" width="28" height="27" rx="2" fill="#080C18" stroke="#1E3370" strokeWidth="1"/>
