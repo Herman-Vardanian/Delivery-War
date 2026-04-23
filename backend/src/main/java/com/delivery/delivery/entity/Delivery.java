@@ -1,7 +1,7 @@
 package com.delivery.delivery.entity;
 
 import com.delivery.store.entity.Store;
-import com.delivery.deliveryslot.entity.DeliverySlot;
+import com.delivery.deliverySlot.entity.DeliverySlot;
 import jakarta.persistence.*;
 import lombok.*;
 
