@@ -39,8 +39,8 @@ public class AuctionControllerTest {
     void createAuction_returnsCreated() throws Exception {
         AuctionDto input = AuctionDto.builder()
                 .startPrice(10.0f)
-                .startTime(LocalDateTime.of(2026, 4, 23, 10, 0))
-                .endTime(LocalDateTime.of(2026, 4, 23, 11, 0))
+                .startTime(LocalDateTime.of(2026, 4, 23, 10, 0).toString())
+                .endTime(LocalDateTime.of(2026, 4, 23, 11, 0).toString())
                 .build();
 
         AuctionDto saved = AuctionDto.builder()

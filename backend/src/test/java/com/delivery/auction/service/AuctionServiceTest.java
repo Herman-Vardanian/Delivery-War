@@ -39,16 +39,16 @@ public class AuctionServiceTest {
     void createAuction_savesAndReturnsDto() {
         AuctionDto dto = AuctionDto.builder()
                 .startPrice(10.0f)
-                .startTime(LocalDateTime.of(2026, 4, 23, 10, 0))
-                .endTime(LocalDateTime.of(2026, 4, 23, 11, 0))
+                .startTime(LocalDateTime.of(2026, 4, 23, 10, 0).toString())
+                .endTime(LocalDateTime.of(2026, 4, 23, 11, 0).toString())
                 .status(AuctionStatus.OPEN)
                 .build();
 
         Auction savedEntity = Auction.builder()
                 .id(1L)
                 .startPrice(10.0f)
-                .startTime(dto.getStartTime())
-                .endTime(dto.getEndTime())
+                .startTime(LocalDateTime.parse(dto.getStartTime()))
+                .endTime(LocalDateTime.parse(dto.getEndTime()))
                 .status(AuctionStatus.OPEN)
                 .build();
 

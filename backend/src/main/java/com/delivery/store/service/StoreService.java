@@ -44,6 +44,13 @@ public class StoreService {
                 .orElseThrow(() -> new ResourceNotFoundException("Store not found: " + id));
     }
 
+    public List<StoreDto> getStoreLeaderboard(){
+        List<Store> topStores = repository.findTop5ByOrderByTotalSpentDesc();
+        return topStores.stream()
+                .map(mapper::toDto)
+                .collect(Collectors.toList());
+    }
+
     public List<StoreDto> listStores() {
         return repository.findAll().stream().map(mapper::toDto).collect(Collectors.toList());
     }
