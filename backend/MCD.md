@@ -158,6 +158,7 @@ Représente un créneau de livraison.
 Représente une enchère créée par un administrateur.
 
 * id (PK)
+* startPrice
 * startTime
 * endTime
 * status (OPEN, CLOSED)
