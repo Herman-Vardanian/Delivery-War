@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { authModel } from '../../models/authModel';
-import { auctions as auctionsApi, bids as bidsApi } from '../../controllers/endpoints';
+import { auctions as auctionsApi, bids as bidsApi, deliverySlots as deliverySlotsApi } from '../../controllers/endpoints';
 import type { Auction as BackendAuction } from '../../interfaces/Auction';
 import type { Bid } from '../../interfaces/Bid';
 import { AuctionStatus } from '../../interfaces/Auction';
+import { DeliverySlotStatus } from '../../interfaces/DeliverySlot';
 
 type DisplayStatus = 'leading' | 'outbid' | 'open' | 'won' | 'lost';
 
@@ -83,10 +84,20 @@ function buildAuction(
   return { id: a.id, slot, endTime: a.endTime ?? '', currentBid, myBid, status };
 }
 
+function nowLocalInput(): string {
+  const d = new Date();
+  const offset = d.getTimezoneOffset();
+  const local = new Date(d.getTime() - offset * 60 * 1000);
+  return local.toISOString().slice(0, 16);
+}
+
 interface NewAuctionForm {
-  slot: string;
-  startBid: string;
+  deliveryDate: string;
+  deliveryStartTime: string;
+  deliveryEndTime: string;
+  auctionStart: string;
   durationMin: string;
+  startBid: string;
 }
 
 export default function DashboardPage() {
@@ -100,7 +111,7 @@ export default function DashboardPage() {
   const [bidInputs, setBidInputs] = useState<Record<number, string>>({});
   const [bidErrors, setBidErrors] = useState<Record<number, string>>({});
 
-  const [newAuction, setNewAuction] = useState<NewAuctionForm>({ slot: '', startBid: '', durationMin: '5' });
+  const [newAuction, setNewAuction] = useState<NewAuctionForm>({ deliveryDate: '', deliveryStartTime: '', deliveryEndTime: '', auctionStart: nowLocalInput(), durationMin: '5', startBid: '' });
   const [createError, setCreateError] = useState('');
   const [creating, setCreating] = useState(false);
 
@@ -140,29 +151,39 @@ export default function DashboardPage() {
   }, [loadAuctions]);
 
   const createAuction = async () => {
-    if (!newAuction.startBid) {
-      setCreateError('Le prix de départ est requis.');
-      return;
-    }
+    if (!newAuction.deliveryDate) { setCreateError('La date de livraison est requise.'); return; }
+    if (!newAuction.deliveryStartTime) { setCreateError('L\'heure de début de livraison est requise.'); return; }
+    if (!newAuction.deliveryEndTime) { setCreateError('L\'heure de fin de livraison est requise.'); return; }
+    if (!newAuction.startBid) { setCreateError('Le prix de départ est requis.'); return; }
     const startBid = parseFloat(newAuction.startBid);
-    if (isNaN(startBid) || startBid <= 0) {
-      setCreateError('Prix de départ invalide.');
-      return;
-    }
+    if (isNaN(startBid) || startBid <= 0) { setCreateError('Prix de départ invalide.'); return; }
+
+    const deliveryStart = new Date(`${newAuction.deliveryDate}T${newAuction.deliveryStartTime}`);
+    const deliveryEnd = new Date(`${newAuction.deliveryDate}T${newAuction.deliveryEndTime}`);
+    const auctionBegin = newAuction.auctionStart ? new Date(newAuction.auctionStart) : new Date();
     const durationMin = parseInt(newAuction.durationMin) || 5;
-    const now = new Date();
-    const end = new Date(now.getTime() + durationMin * 60 * 1000);
+    const auctionEnd = new Date(auctionBegin.getTime() + durationMin * 60 * 1000);
+
     setCreateError('');
     setCreating(true);
     try {
+      const slot = await deliverySlotsApi.create({
+        id: 0,
+        technicalId: 0,
+        startTime: toIsoLocal(deliveryStart) as unknown as Date,
+        endTime: toIsoLocal(deliveryEnd) as unknown as Date,
+        capacity: 1,
+        status: DeliverySlotStatus.OPEN,
+      });
       await auctionsApi.create({
         id: 0,
         startPrice: startBid,
-        startTime: toIsoLocal(now),
-        endTime: toIsoLocal(end),
+        startTime: toIsoLocal(auctionBegin),
+        endTime: toIsoLocal(auctionEnd),
         status: AuctionStatus.OPEN,
+        deliverySlotId: slot.id,
       });
-      setNewAuction({ slot: '', startBid: '', durationMin: '5' });
+      setNewAuction({ deliveryDate: '', deliveryStartTime: '', deliveryEndTime: '', auctionStart: nowLocalInput(), durationMin: '5', startBid: '' });
       await loadAuctions();
     } catch (e: unknown) {
       setCreateError(e instanceof Error ? e.message : 'Erreur création');
@@ -211,25 +232,50 @@ export default function DashboardPage() {
             <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--c-pri)', marginBottom: '0.75rem', fontWeight: 700 }}>
               Admin — Créer une enchère
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr auto', gap: '0.75rem', alignItems: 'end' }}>
+            <div style={{ fontSize: '0.65rem', color: 'var(--c-text3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.4rem' }}>Créneau de livraison</div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem', marginBottom: '0.75rem' }}>
               <div>
-                <label style={{ fontSize: '0.68rem', color: 'var(--c-text3)', display: 'block', marginBottom: '0.3rem' }}>Créneau (libellé)</label>
-                <input type="text" placeholder="09h–11h" value={newAuction.slot}
-                  onChange={(e) => setNewAuction((p) => ({ ...p, slot: e.target.value }))}
-                  style={{ width: '100%', boxSizing: 'border-box', background: 'var(--c-bg)', border: '1px solid var(--c-border)', borderRadius: 6, padding: '0.45rem 0.65rem', fontSize: '0.82rem', color: 'var(--c-text)', outline: 'none' }}
+                <label style={{ fontSize: '0.68rem', color: 'var(--c-text3)', display: 'block', marginBottom: '0.3rem' }}>Date</label>
+                <input type="date" value={newAuction.deliveryDate}
+                  onChange={(e) => setNewAuction((p) => ({ ...p, deliveryDate: e.target.value }))}
+                  style={{ width: '100%', boxSizing: 'border-box', background: 'var(--c-bg)', border: '1px solid var(--c-border)', borderRadius: 6, padding: '0.45rem 0.65rem', fontSize: '0.82rem', color: 'var(--c-text)', outline: 'none', colorScheme: 'dark' }}
                 />
               </div>
               <div>
-                <label style={{ fontSize: '0.68rem', color: 'var(--c-text3)', display: 'block', marginBottom: '0.3rem' }}>Prix départ (€)</label>
-                <input type="number" min={1} placeholder="50" value={newAuction.startBid}
-                  onChange={(e) => setNewAuction((p) => ({ ...p, startBid: e.target.value }))}
-                  style={{ width: '100%', boxSizing: 'border-box', background: 'var(--c-bg)', border: '1px solid var(--c-border)', borderRadius: 6, padding: '0.45rem 0.65rem', fontSize: '0.82rem', color: 'var(--c-text)', outline: 'none' }}
+                <label style={{ fontSize: '0.68rem', color: 'var(--c-text3)', display: 'block', marginBottom: '0.3rem' }}>Heure de début</label>
+                <input type="time" value={newAuction.deliveryStartTime}
+                  onChange={(e) => setNewAuction((p) => ({ ...p, deliveryStartTime: e.target.value }))}
+                  style={{ width: '100%', boxSizing: 'border-box', background: 'var(--c-bg)', border: '1px solid var(--c-border)', borderRadius: 6, padding: '0.45rem 0.65rem', fontSize: '0.82rem', color: 'var(--c-text)', outline: 'none', colorScheme: 'dark' }}
                 />
               </div>
               <div>
-                <label style={{ fontSize: '0.68rem', color: 'var(--c-text3)', display: 'block', marginBottom: '0.3rem' }}>Durée (min)</label>
+                <label style={{ fontSize: '0.68rem', color: 'var(--c-text3)', display: 'block', marginBottom: '0.3rem' }}>Heure de fin</label>
+                <input type="time" value={newAuction.deliveryEndTime}
+                  onChange={(e) => setNewAuction((p) => ({ ...p, deliveryEndTime: e.target.value }))}
+                  style={{ width: '100%', boxSizing: 'border-box', background: 'var(--c-bg)', border: '1px solid var(--c-border)', borderRadius: 6, padding: '0.45rem 0.65rem', fontSize: '0.82rem', color: 'var(--c-text)', outline: 'none', colorScheme: 'dark' }}
+                />
+              </div>
+            </div>
+            <div style={{ fontSize: '0.65rem', color: 'var(--c-text3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.4rem' }}>Enchère</div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr auto', gap: '0.75rem', alignItems: 'end' }}>
+              <div>
+                <label style={{ fontSize: '0.68rem', color: 'var(--c-text3)', display: 'block', marginBottom: '0.3rem' }}>Début de l'enchère</label>
+                <input type="datetime-local" value={newAuction.auctionStart}
+                  onChange={(e) => setNewAuction((p) => ({ ...p, auctionStart: e.target.value }))}
+                  style={{ width: '100%', boxSizing: 'border-box', background: 'var(--c-bg)', border: '1px solid var(--c-border)', borderRadius: 6, padding: '0.45rem 0.65rem', fontSize: '0.82rem', color: 'var(--c-text)', outline: 'none', colorScheme: 'dark' }}
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: '0.68rem', color: 'var(--c-text3)', display: 'block', marginBottom: '0.3rem' }}>Durée de l'enchère (min)</label>
                 <input type="number" min={1} placeholder="5" value={newAuction.durationMin}
                   onChange={(e) => setNewAuction((p) => ({ ...p, durationMin: e.target.value }))}
+                  style={{ width: '100%', boxSizing: 'border-box', background: 'var(--c-bg)', border: '1px solid var(--c-border)', borderRadius: 6, padding: '0.45rem 0.65rem', fontSize: '0.82rem', color: 'var(--c-text)', outline: 'none' }}
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: '0.68rem', color: 'var(--c-text3)', display: 'block', marginBottom: '0.3rem' }}>Prix de départ (€)</label>
+                <input type="number" min={1} placeholder="50" value={newAuction.startBid}
+                  onChange={(e) => setNewAuction((p) => ({ ...p, startBid: e.target.value }))}
                   style={{ width: '100%', boxSizing: 'border-box', background: 'var(--c-bg)', border: '1px solid var(--c-border)', borderRadius: 6, padding: '0.45rem 0.65rem', fontSize: '0.82rem', color: 'var(--c-text)', outline: 'none' }}
                 />
               </div>
