@@ -1,15 +1,6 @@
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+import { Store } from "../interfaces/Store"
 
-export interface Store {
-  id?: number;
-  name?: string;
-  email?: string;
-  address?: string;
-  role?: string;
-  balance?: number;
-  totalSpent?: number;
-  whalePass?: boolean;
-}
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 
 interface RegisterPayload {
   storeId: string;
