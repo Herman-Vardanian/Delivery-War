@@ -13,17 +13,11 @@ import java.time.LocalDateTime;
 @Builder
 public class DeliverySlot {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long technicalId;
-
-    @Embedded
+    @EmbeddedId
     private DeliverySlotId id;
 
     private LocalDateTime startTime;
-
     private LocalDateTime endTime;
-
     private Integer capacity;
 
     @Enumerated(EnumType.STRING)

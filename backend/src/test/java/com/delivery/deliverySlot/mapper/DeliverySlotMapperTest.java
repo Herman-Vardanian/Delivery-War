@@ -15,7 +15,7 @@ public class DeliverySlotMapperTest {
     private final DeliverySlotMapper mapper = new DeliverySlotMapper();
 
     private static final LocalDateTime START = LocalDateTime.of(2024, 6, 1, 9, 0);
-    private static final LocalDateTime END   = LocalDateTime.of(2024, 6, 1, 11, 0);
+    private static final LocalDateTime END = LocalDateTime.of(2024, 6, 1, 11, 0);
 
     // ------------------------------------------------------------------ toDto
 
@@ -27,7 +27,6 @@ public class DeliverySlotMapperTest {
     @Test
     void toDto_mapsAllFields() {
         DeliverySlot entity = DeliverySlot.builder()
-                .technicalId(42L)
                 .id(DeliverySlotId.builder().val("1").build())
                 .startTime(START)
                 .endTime(END)

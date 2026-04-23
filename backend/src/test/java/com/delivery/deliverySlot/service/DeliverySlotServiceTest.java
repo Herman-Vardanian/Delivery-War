@@ -32,7 +32,7 @@ public class DeliverySlotServiceTest {
     private DeliverySlotService service;
 
     private static final LocalDateTime START = LocalDateTime.of(2024, 6, 1, 9, 0);
-    private static final LocalDateTime END   = LocalDateTime.of(2024, 6, 1, 11, 0);
+    private static final LocalDateTime END = LocalDateTime.of(2024, 6, 1, 11, 0);
 
     @BeforeEach
     void setUp() {
@@ -44,7 +44,6 @@ public class DeliverySlotServiceTest {
     @Test
     void findAll_returnsAllSlots() {
         DeliverySlot slot1 = DeliverySlot.builder()
-                .technicalId(1L)
                 .id(DeliverySlotId.builder().val("1").build())
                 .startTime(START)
                 .endTime(END)
@@ -53,7 +52,6 @@ public class DeliverySlotServiceTest {
                 .build();
 
         DeliverySlot slot2 = DeliverySlot.builder()
-                .technicalId(2L)
                 .id(DeliverySlotId.builder().val("2").build())
                 .startTime(START)
                 .endTime(END)
@@ -87,7 +85,6 @@ public class DeliverySlotServiceTest {
     @Test
     void findById_found_returnsDto() {
         DeliverySlot slot = DeliverySlot.builder()
-                .technicalId(1L)
                 .id(DeliverySlotId.builder().val("1").build())
                 .startTime(START)
                 .endTime(END)
@@ -129,7 +126,6 @@ public class DeliverySlotServiceTest {
                 .build();
 
         DeliverySlot savedEntity = DeliverySlot.builder()
-                .technicalId(10L)
                 .id(DeliverySlotId.builder().val("1").build())
                 .startTime(START)
                 .endTime(END)
@@ -159,7 +155,6 @@ public class DeliverySlotServiceTest {
                 .build();
 
         DeliverySlot savedEntity = DeliverySlot.builder()
-                .technicalId(20L)
                 .id(DeliverySlotId.builder().val("2").build())
                 .startTime(START)
                 .endTime(END)
