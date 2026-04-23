@@ -26,12 +26,14 @@ public class StoreService {
 
     public StoreDto createStore(StoreDto dto) {
         Store s = mapper.toEntity(dto);
-        if (s.getBalance() == null)
-            s.setBalance(BigDecimal.ZERO);
-        if (s.getReservedBalance() == null)
-            s.setReservedBalance(BigDecimal.ZERO);
-        if (s.getTotalSpent() == null)
-            s.setTotalSpent(BigDecimal.ZERO);
+        // Forcer les valeurs par défaut à la création
+        s.setRole(com.delivery.store.entity.Role.STORE);
+        s.setBalance(BigDecimal.ZERO);
+        s.setReservedBalance(BigDecimal.ZERO);
+        s.setTotalSpent(BigDecimal.ZERO);
+        if (s.getWhalePass() == null) {
+            s.setWhalePass(Boolean.FALSE);
+        }
         Store saved = repository.save(s);
         return mapper.toDto(saved);
     }
@@ -40,6 +42,13 @@ public class StoreService {
         return repository.findById(id)
                 .map(mapper::toDto)
                 .orElseThrow(() -> new ResourceNotFoundException("Store not found: " + id));
+    }
+
+    public List<StoreDto> getStoreLeaderboard(){
+        List<Store> topStores = repository.findTop5ByOrderByTotalSpentDesc();
+        return topStores.stream()
+                .map(mapper::toDto)
+                .collect(Collectors.toList());
     }
 
     public List<StoreDto> listStores() {

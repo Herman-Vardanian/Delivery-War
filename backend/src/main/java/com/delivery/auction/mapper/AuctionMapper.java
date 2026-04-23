@@ -20,8 +20,8 @@ public class AuctionMapper {
         return AuctionDto.builder()
                 .id(a.getId())
                 .startPrice(a.getStartPrice())
-                .startTime(a.getStartTime().toString())
-                .endTime(a.getEndTime().toString())
+                .startTime(a.getStartTime() != null ? a.getStartTime().toString() : null)
+                .endTime(a.getEndTime() != null ? a.getEndTime().toString() : null)
                 .status(a.getStatus())
                 .deliverySlotId(a.getDeliverySlotId() != null ? a.getDeliverySlotId().toString() : null)
                 .build();

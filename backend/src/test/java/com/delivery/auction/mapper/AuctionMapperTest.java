@@ -30,16 +30,16 @@ public class AuctionMapperTest {
         assertNotNull(dto);
         assertEquals(a.getId(), dto.getId());
         assertEquals(a.getStartPrice(), dto.getStartPrice());
-        assertEquals(a.getStartTime(), dto.getStartTime());
-        assertEquals(a.getEndTime(), dto.getEndTime());
+        assertEquals(a.getStartTime().toString(), dto.getStartTime());
+        assertEquals(a.getEndTime().toString(), dto.getEndTime());
         assertEquals(a.getStatus(), dto.getStatus());
 
         Auction converted = mapper.toEntity(dto);
         assertNotNull(converted);
         assertEquals(dto.getId(), converted.getId());
         assertEquals(dto.getStartPrice(), converted.getStartPrice());
-        assertEquals(dto.getStartTime(), converted.getStartTime());
-        assertEquals(dto.getEndTime(), converted.getEndTime());
+        assertEquals(dto.getStartTime().toString(), converted.getStartTime().toString());
+        assertEquals(dto.getEndTime().toString(), converted.getEndTime().toString());
         assertEquals(dto.getStatus(), converted.getStatus());
     }
 
