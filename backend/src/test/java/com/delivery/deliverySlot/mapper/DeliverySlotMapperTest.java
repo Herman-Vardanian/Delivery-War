@@ -39,8 +39,8 @@ public class DeliverySlotMapperTest {
 
         assertNotNull(dto);
         assertEquals(1L, dto.getId());
-        assertEquals(START, dto.getStartTime());
-        assertEquals(END, dto.getEndTime());
+        assertEquals(START.toString(), dto.getStartTime());
+        assertEquals(END.toString(), dto.getEndTime());
         assertEquals(10, dto.getCapacity());
         assertEquals(DeliverySlotStatus.OPEN, dto.getStatus());
     }
@@ -86,8 +86,8 @@ public class DeliverySlotMapperTest {
     void toEntity_mapsAllFields() {
         DeliverySlotDto dto = DeliverySlotDto.builder()
                 .id(7L)
-                .startTime(START)
-                .endTime(END)
+                .startTime(START.toString())
+                .endTime(END.toString())
                 .capacity(20)
                 .status(DeliverySlotStatus.OPEN)
                 .build();
@@ -106,8 +106,8 @@ public class DeliverySlotMapperTest {
     void toEntity_nullCapacityAndStatus() {
         DeliverySlotDto dto = DeliverySlotDto.builder()
                 .id(5L)
-                .startTime(START)
-                .endTime(END)
+                .startTime(START.toString())
+                .endTime(END.toString())
                 .capacity(null)
                 .status(null)
                 .build();
@@ -125,8 +125,8 @@ public class DeliverySlotMapperTest {
     void roundtrip_dtoToEntityToDto() {
         DeliverySlotDto original = DeliverySlotDto.builder()
                 .id(9L)
-                .startTime(START)
-                .endTime(END)
+                .startTime(START.toString())
+                .endTime(END.toString())
                 .capacity(15)
                 .status(DeliverySlotStatus.OPEN)
                 .build();

@@ -101,8 +101,8 @@ public class DeliverySlotServiceTest {
 
         assertNotNull(result);
         assertEquals(1L, result.getId());
-        assertEquals(START, result.getStartTime());
-        assertEquals(END, result.getEndTime());
+        assertEquals(START.toString(), result.getStartTime());
+        assertEquals(END.toString(), result.getEndTime());
         assertEquals(10, result.getCapacity());
         assertEquals(DeliverySlotStatus.OPEN, result.getStatus());
     }
@@ -122,8 +122,8 @@ public class DeliverySlotServiceTest {
     void save_persistsAndReturnsDto() {
         DeliverySlotDto inputDto = DeliverySlotDto.builder()
                 .id(1L)
-                .startTime(START)
-                .endTime(END)
+                .startTime(START.toString())
+                .endTime(END.toString())
                 .capacity(8)
                 .status(DeliverySlotStatus.OPEN)
                 .build();
@@ -152,8 +152,8 @@ public class DeliverySlotServiceTest {
     void save_withStatusPending() {
         DeliverySlotDto inputDto = DeliverySlotDto.builder()
                 .id(2L)
-                .startTime(START)
-                .endTime(END)
+                .startTime(START.toString())
+                .endTime(END.toString())
                 .capacity(3)
                 .status(DeliverySlotStatus.PENDING)
                 .build();
