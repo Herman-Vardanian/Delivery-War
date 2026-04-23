@@ -1,7 +1,9 @@
 import { Link, useLocation } from 'react-router-dom';
+import { authModel } from '../../models/authModel';
 
 export default function AppNavbar() {
   const { pathname } = useLocation();
+  const user = authModel.getUser();
 
   const linkStyle = (path) => ({
     fontSize: '0.8rem',
@@ -39,14 +41,17 @@ export default function AppNavbar() {
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
         <nav style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
           <Link to="/dashboard" style={linkStyle('/dashboard')}>Dashboard</Link>
+          <Link to="/leaderboard" style={linkStyle('/leaderboard')}>Classement</Link>
           <Link to="/profile" style={linkStyle('/profile')}>Mon compte</Link>
         </nav>
         <div style={{ fontSize: '0.75rem', color: 'var(--c-text3)', borderRight: '1px solid var(--c-border)', paddingRight: '0.75rem', lineHeight: 1.4, display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <div>
-            <div style={{ color: 'var(--c-text2)', fontWeight: 600 }}>PARIS-NORD-07</div>
-            <div style={{ fontSize: '0.68rem' }}>Gratuit</div>
+            <div style={{ color: 'var(--c-text2)', fontWeight: 600 }}>{user?.name || '—'}</div>
+            <div style={{ fontSize: '0.68rem' }}>{user?.whalePass ? 'Pass Whale' : 'Gratuit'}</div>
           </div>
-          <div style={{ fontWeight: 800, fontSize: '0.9rem', color: 'var(--c-success)' }}>€ 0,00</div>
+          <div style={{ fontWeight: 800, fontSize: '0.9rem', color: 'var(--c-success)' }}>
+            € {user?.balance != null ? Number(user.balance).toLocaleString('fr-FR', { minimumFractionDigits: 2 }) : '0,00'}
+          </div>
         </div>
         <Link
           to="/login"

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { authModel } from '../../models/authModel';
 
 const MOCK_AUCTIONS = [
   { id: 1, zone: 'Paris 18e', slot: '09h–11h', currentBid: 137, myBid: 137, participants: 4, secondsLeft: 142, status: 'leading' },
@@ -36,6 +37,9 @@ const STATUS_CONFIG = {
 };
 
 export default function DashboardPage() {
+  const user = authModel.getUser();
+  const storeName = user?.name || '—';
+
   const [auctions, setAuctions] = useState(MOCK_AUCTIONS);
   const [bidInputs, setBidInputs] = useState({});
 
@@ -62,7 +66,9 @@ export default function DashboardPage() {
         {/* ── Header ── */}
         <div style={{ marginBottom: '1.75rem' }}>
           <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--c-text3)', marginBottom: '0.3rem' }}>Tableau de bord</div>
-          <h1 style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--c-text)', margin: 0 }}>Enchères en cours</h1>
+          <h1 style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--c-text)', margin: 0 }}>
+            Bienvenue, <span style={{ color: 'var(--c-pri)' }}>{storeName}</span>
+          </h1>
         </div>
 
         {/* ── Stats rapides ── */}

@@ -5,6 +5,7 @@ import RegisterPage from '../views/pages/RegisterPage';
 import ProfilePage from '../views/pages/ProfilePage';
 import DashboardPage from '../views/pages/DashboardPage';
 import AdminDashboardPage from '../views/pages/AdminDashboardPage';
+import LeaderboardPage from '../views/pages/LeaderboardPage';
 import Navbar from '../views/components/Navbar';
 import AppNavbar from '../views/components/AppNavbar';
 
@@ -76,6 +77,14 @@ export default function AppRouter() {
             <AppLayout>
               <ProfilePage />
             </AppLayout>
+          }
+        />
+        <Route
+          path="/leaderboard"
+          element={
+            <PublicLayout>
+              <LeaderboardPage />
+            </PublicLayout>
           }
         />
         <Route path="*" element={<Navigate to="/" replace />} />
