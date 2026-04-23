@@ -39,11 +39,6 @@ public class StoreController {
         return ResponseEntity.ok(storeService.getStore(id));
     }
 
-    @PostMapping("/login")
-    public ResponseEntity<StoreDto> login(@RequestBody StoreDto dto) {
-        return ResponseEntity.ok(storeService.login(dto.getName(), dto.getPassword()));
-    }
-
     @GetMapping
     public ResponseEntity<List<StoreDto>> listStores() {
         return ResponseEntity.ok(storeService.listStores());
