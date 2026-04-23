@@ -5,14 +5,9 @@ import com.delivery.auction.entity.Auction;
 import com.delivery.auction.mapper.AuctionMapper;
 import com.delivery.auction.repository.AuctionRepository;
 import com.delivery.common.exception.ResourceNotFoundException;
-import com.delivery.store.dto.StoreDto;
-import com.delivery.store.entity.Store;
-import com.delivery.store.mapper.StoreMapper;
-import com.delivery.store.repository.StoreRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 

@@ -24,6 +24,10 @@ public class Store {
     @Enumerated(EnumType.STRING)
     private Role role;
 
+    private String email;
+
+    private String address;
+
     @Column(precision = 19, scale = 2)
     private BigDecimal balance;
 

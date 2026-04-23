@@ -38,4 +38,10 @@ public class StoreController {
     public ResponseEntity<StoreDto> updateStore(@PathVariable Long id, @RequestBody StoreDto dto) {
         return ResponseEntity.ok(storeService.updateStore(id, dto));
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteStore(@PathVariable Long id) {
+        storeService.deleteStore(id);
+        return ResponseEntity.noContent().build();
+    }
 }

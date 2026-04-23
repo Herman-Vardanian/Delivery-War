@@ -2,12 +2,9 @@ package com.delivery.auction.mapper;
 
 import com.delivery.auction.dto.AuctionDto;
 import com.delivery.auction.entity.Auction;
-import com.delivery.store.dto.StoreDto;
-import com.delivery.store.entity.Role;
-import com.delivery.store.entity.Store;
+
 import org.springframework.stereotype.Component;
 
-import java.math.BigDecimal;
 
 @Component
 public class AuctionMapper {

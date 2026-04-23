@@ -1,32 +1,31 @@
-package com.delivery.auction.entity;
+package com.delivery.deliverySlot.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
 
-
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "auctions")
+@Table(name = "delivery_slots")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Auction {
+public class DeliverySlot {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long technicalId;
 
-    private Float startPrice;
+    @Embedded
+    private DeliverySlotId id;
 
     private LocalDateTime startTime;
 
     private LocalDateTime endTime;
 
-    @Enumerated(EnumType.STRING)
-    private AuctionStatus status;
+    private Integer capacity;
 
-    /*@Embedded
-    private Long deliverySlotId;*/
+    @Enumerated(EnumType.STRING)
+    private DeliverySlotStatus status;
 }
