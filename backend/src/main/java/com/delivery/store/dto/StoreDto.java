@@ -13,6 +13,8 @@ public class StoreDto {
     private String name;
     private String password;
     private String role;
+    private String email;
+    private String address;
     private BigDecimal balance;
     private BigDecimal reservedBalance;
     private BigDecimal totalSpent;
