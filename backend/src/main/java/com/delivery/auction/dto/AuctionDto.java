@@ -1,7 +1,6 @@
 package com.delivery.auction.dto;
 
 import com.delivery.auction.entity.AuctionStatus;
-import jakarta.persistence.Embedded;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import lombok.AllArgsConstructor;
