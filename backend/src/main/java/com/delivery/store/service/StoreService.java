@@ -26,7 +26,13 @@ public class StoreService {
 
     public StoreDto createStore(StoreDto dto) {
         Store s = mapper.toEntity(dto);
-        // Forcer les valeurs par défaut à la création
+        // Valider et forcer les valeurs par défaut à la création
+        if (s.getName() == null || s.getName().isBlank()) {
+            throw new IllegalArgumentException("Le champ 'name' est requis.");
+        }
+        if (repository.findByName(s.getName()).isPresent()) {
+            throw new IllegalArgumentException("Un store existe déjà avec ce nom.");
+        }
         s.setRole(com.delivery.store.entity.Role.STORE);
         s.setBalance(BigDecimal.ZERO);
         s.setReservedBalance(BigDecimal.ZERO);
@@ -44,19 +50,11 @@ public class StoreService {
                 .orElseThrow(() -> new ResourceNotFoundException("Store not found: " + id));
     }
 
-    public List<StoreDto> getStoreLeaderboard(){
+    public List<StoreDto> getStoreLeaderboard() {
         List<Store> topStores = repository.findTop5ByOrderByTotalSpentDesc();
         return topStores.stream()
                 .map(mapper::toDto)
                 .collect(Collectors.toList());
-    }
-
-    public StoreDto login(String name, String password) {
-        Store store = repository.findByName(name)
-                .orElseThrow(() -> new IllegalArgumentException("Identifiants incorrects."));
-        if (!password.equals(store.getPassword()))
-            throw new IllegalArgumentException("Identifiants incorrects.");
-        return mapper.toDto(store);
     }
 
     public List<StoreDto> listStores() {
@@ -93,6 +91,14 @@ public class StoreService {
             existing.setPassId(dto.getPassId());
         Store saved = repository.save(existing);
         return mapper.toDto(saved);
+    }
+
+    public StoreDto login(String name, String password) {
+        Store store = repository.findByName(name)
+                .orElseThrow(() -> new IllegalArgumentException("Identifiants incorrects."));
+        if (!password.equals(store.getPassword()))
+            throw new IllegalArgumentException("Identifiants incorrects.");
+        return mapper.toDto(store);
     }
 
     public void deleteStore(Long id) {

@@ -1,3 +1,26 @@
+# IntelliJ IDEA — fichiers personnels (ne pas tracker)
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/usage.statistics.xml
+.idea/dictionaries/
+.idea/shelf/
+
+# Node
+frontend/node_modules/
+frontend/dist/
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# Docs internes IA
+frontend/SUIVI.md
+frontend/modele.md
+
+# OS
+.DS_Store
+Thumbs.db
 
 backend/.idea/
 

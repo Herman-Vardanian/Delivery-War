@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/api/stores")
 public class StoreController {
@@ -28,14 +29,14 @@ public class StoreController {
         return ResponseEntity.ok(created);
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<StoreDto> getStore(@PathVariable Long id) {
-        return ResponseEntity.ok(storeService.getStore(id));
-    }
-
     @PostMapping("/login")
     public ResponseEntity<StoreDto> login(@RequestBody StoreDto dto) {
         return ResponseEntity.ok(storeService.login(dto.getName(), dto.getPassword()));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<StoreDto> getStore(@PathVariable Long id) {
+        return ResponseEntity.ok(storeService.getStore(id));
     }
 
     @GetMapping
