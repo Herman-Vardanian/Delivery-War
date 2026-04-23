@@ -9,6 +9,7 @@ import com.delivery.delivery.repository.DeliveryRepository;
 import com.delivery.store.entity.Store;
 import com.delivery.store.repository.StoreRepository;
 import com.delivery.deliverySlot.entity.DeliverySlot;
+import com.delivery.deliverySlot.entity.DeliverySlotId;
 import com.delivery.deliverySlot.repository.DeliverySlotRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -47,7 +48,7 @@ public class DeliveryServiceTest {
     @Test
     void createDelivery_setsDefaultsAndSaves() {
         Store store = Store.builder().id(1L).name("TestStore").build();
-        DeliverySlot deliverySlot = DeliverySlot.builder().id(1L).build();
+        DeliverySlot deliverySlot = DeliverySlot.builder().id(DeliverySlotId.builder().value("1").build()).build();
 
         DeliveryDto dto = DeliveryDto.builder()
                 .address("123 Test St")
@@ -156,7 +157,7 @@ public class DeliveryServiceTest {
 
     @Test
     void getDeliveriesByDeliverySlot_returnsList() {
-        DeliverySlot deliverySlot = DeliverySlot.builder().id(1L).build();
+        DeliverySlot deliverySlot = DeliverySlot.builder().id(DeliverySlotId.builder().value("1").build()).build();
         Delivery a = Delivery.builder().id(1L).address("Address A").deliverySlot(deliverySlot).build();
         Delivery b = Delivery.builder().id(2L).address("Address B").deliverySlot(deliverySlot).build();
 

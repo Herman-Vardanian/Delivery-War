@@ -20,7 +20,9 @@ public class BidMapper {
         dto.setId(bid.getId());
         dto.setAmount(bid.getAmount());
         dto.setTimestamp(bid.getTimestamp());
-        dto.setStatus(bid.getStatus().name());
+        if (bid.getStatus() != null) {
+            dto.setStatus(bid.getStatus().name());
+        }
         
         if (bid.getStore() != null) {
             dto.setStoreId(bid.getStore().getId());

@@ -19,7 +19,9 @@ public class DeliveryMapper {
         DeliveryDto dto = new DeliveryDto();
         dto.setId(delivery.getId());
         dto.setAddress(delivery.getAddress());
-        dto.setStatus(delivery.getStatus().name());
+        if (delivery.getStatus() != null) {
+            dto.setStatus(delivery.getStatus().name());
+        }
         dto.setDeliveryCompany(delivery.getDeliveryCompany());
         
         if (delivery.getStore() != null) {
@@ -28,7 +30,7 @@ public class DeliveryMapper {
         }
         
         if (delivery.getDeliverySlot() != null) {
-            dto.setDeliverySlotId(delivery.getDeliverySlot().getId());
+            dto.setDeliverySlotId(Long.valueOf(delivery.getDeliverySlot().getId().getValue()));
         }
         
         return dto;
