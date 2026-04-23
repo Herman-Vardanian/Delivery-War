@@ -50,12 +50,51 @@ const STATUS_CONFIG = {
   lost:    { label: 'Perdu',    color: 'var(--c-text3)',     bg: 'rgba(255,255,255,.04)', border: 'var(--c-border)' },
 };
 
+interface NewAuctionForm {
+  zone: string;
+  slot: string;
+  startBid: string;
+  duration: string;
+}
+
 export default function DashboardPage() {
   const user = authModel.getUser();
   const storeName = user?.name || '—';
+  const isAdmin = user?.role === 'ADMIN';
 
   const [auctions, setAuctions] = useState<Auction[]>(MOCK_AUCTIONS);
   const [bidInputs, setBidInputs] = useState<Record<number, string>>({});
+
+  const [newAuction, setNewAuction] = useState<NewAuctionForm>({ zone: '', slot: '', startBid: '', duration: '300' });
+  const [createError, setCreateError] = useState('');
+
+  const createAuction = () => {
+    if (!newAuction.zone.trim() || !newAuction.slot.trim() || !newAuction.startBid) {
+      setCreateError('Zone, créneau et prix de départ sont requis.');
+      return;
+    }
+    const startBid = parseFloat(newAuction.startBid);
+    if (isNaN(startBid) || startBid <= 0) {
+      setCreateError('Prix de départ invalide.');
+      return;
+    }
+    setCreateError('');
+    const id = Date.now();
+    setAuctions((prev) => [
+      ...prev,
+      {
+        id,
+        zone: newAuction.zone.trim(),
+        slot: newAuction.slot.trim(),
+        currentBid: startBid,
+        myBid: null,
+        participants: 0,
+        secondsLeft: parseInt(newAuction.duration) || 300,
+        status: 'open' as AuctionStatus,
+      },
+    ]);
+    setNewAuction({ zone: '', slot: '', startBid: '', duration: '300' });
+  };
 
   const placeBid = (id: number) => {
     const amount = parseFloat(bidInputs[id] ?? '');
@@ -84,6 +123,68 @@ export default function DashboardPage() {
             Bienvenue, <span style={{ color: 'var(--c-pri)' }}>{storeName}</span>
           </h1>
         </div>
+
+        {/* ── Section Admin : Créer une enchère ── */}
+        {isAdmin && (
+          <div style={{ background: 'rgba(255,107,26,.06)', border: '1px solid rgba(255,107,26,.25)', borderRadius: 12, padding: '1.25rem 1.5rem', marginBottom: '1.75rem' }}>
+            <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--c-pri)', marginBottom: '0.75rem', fontWeight: 700 }}>
+              Admin — Créer une enchère
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr auto', gap: '0.75rem', alignItems: 'end' }}>
+              <div>
+                <label style={{ fontSize: '0.68rem', color: 'var(--c-text3)', display: 'block', marginBottom: '0.3rem' }}>Zone</label>
+                <input
+                  type="text"
+                  placeholder="Paris 18e"
+                  value={newAuction.zone}
+                  onChange={(e) => setNewAuction((p) => ({ ...p, zone: e.target.value }))}
+                  style={{ width: '100%', boxSizing: 'border-box', background: 'var(--c-bg)', border: '1px solid var(--c-border)', borderRadius: 6, padding: '0.45rem 0.65rem', fontSize: '0.82rem', color: 'var(--c-text)', outline: 'none' }}
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: '0.68rem', color: 'var(--c-text3)', display: 'block', marginBottom: '0.3rem' }}>Créneau</label>
+                <input
+                  type="text"
+                  placeholder="09h–11h"
+                  value={newAuction.slot}
+                  onChange={(e) => setNewAuction((p) => ({ ...p, slot: e.target.value }))}
+                  style={{ width: '100%', boxSizing: 'border-box', background: 'var(--c-bg)', border: '1px solid var(--c-border)', borderRadius: 6, padding: '0.45rem 0.65rem', fontSize: '0.82rem', color: 'var(--c-text)', outline: 'none' }}
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: '0.68rem', color: 'var(--c-text3)', display: 'block', marginBottom: '0.3rem' }}>Prix départ (€)</label>
+                <input
+                  type="number"
+                  min={1}
+                  placeholder="50"
+                  value={newAuction.startBid}
+                  onChange={(e) => setNewAuction((p) => ({ ...p, startBid: e.target.value }))}
+                  style={{ width: '100%', boxSizing: 'border-box', background: 'var(--c-bg)', border: '1px solid var(--c-border)', borderRadius: 6, padding: '0.45rem 0.65rem', fontSize: '0.82rem', color: 'var(--c-text)', outline: 'none' }}
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: '0.68rem', color: 'var(--c-text3)', display: 'block', marginBottom: '0.3rem' }}>Durée (sec)</label>
+                <input
+                  type="number"
+                  min={30}
+                  placeholder="300"
+                  value={newAuction.duration}
+                  onChange={(e) => setNewAuction((p) => ({ ...p, duration: e.target.value }))}
+                  style={{ width: '100%', boxSizing: 'border-box', background: 'var(--c-bg)', border: '1px solid var(--c-border)', borderRadius: 6, padding: '0.45rem 0.65rem', fontSize: '0.82rem', color: 'var(--c-text)', outline: 'none' }}
+                />
+              </div>
+              <button
+                onClick={createAuction}
+                style={{ padding: '0.45rem 1.1rem', background: 'var(--c-pri)', border: 'none', borderRadius: 6, color: '#fff', fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer', whiteSpace: 'nowrap' }}
+              >
+                + Créer
+              </button>
+            </div>
+            {createError && (
+              <div style={{ marginTop: '0.5rem', fontSize: '0.75rem', color: 'var(--c-danger)' }}>{createError}</div>
+            )}
+          </div>
+        )}
 
         {/* ── Stats rapides ── */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.875rem', marginBottom: '1.75rem' }}>
