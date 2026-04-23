@@ -136,7 +136,7 @@ export default function RegisterPage() {
                   type="text"
                   placeholder="EX. PARIS-NORD-07"
                   value={form.storeId}
-                  onChange={(e) => setForm({ ...form, storeId: e.target.value.toUpperCase() })}
+                  onChange={(e) => setForm({ ...form, storeId: e.target.value })}
                   autoComplete="username"
                 />
                 <div className="field-icon">

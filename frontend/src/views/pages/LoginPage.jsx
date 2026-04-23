@@ -66,7 +66,7 @@ export default function LoginPage() {
                   type="text"
                   placeholder="EX. PARIS-NORD-07"
                   value={storeId}
-                  onChange={(e) => setStoreId(e.target.value.toUpperCase())}
+                  onChange={(e) => setStoreId(e.target.value)}
                   autoComplete="username"
                 />
                 <div className="field-icon">
