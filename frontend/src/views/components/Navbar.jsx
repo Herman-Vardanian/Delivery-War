@@ -17,6 +17,9 @@ export default function Navbar() {
         </Link>
 
         <nav className="flex items-center gap-2">
+          <Link to="/leaderboard">
+            <Button variant="ghost" size="sm">Classement</Button>
+          </Link>
           {pathname !== '/login' && (
             <Link to="/login">
               <Button variant="ghost" size="sm">Connexion</Button>
