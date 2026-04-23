@@ -19,3 +19,19 @@ VALUES
 ('Aldi', '1234', 'STORE', 'aldi@mail.com', 'Bordeaux', 700.00, 0.00, 80.00, false, NULL),
 
 ('Admin', 'admin', 'ADMIN', 'admin@delivery.com', 'HQ', 0.00, 0.00, 0.00, false, NULL);
+
+
+INSERT INTO delivery_slots (id, start_time, end_time, capacity, status)
+VALUES
+(1, TIMESTAMP '2026-04-23 14:00:00', TIMESTAMP '2026-04-23 15:00:00', 10, 'OPEN'),
+(2, TIMESTAMP '2026-04-23 15:00:00', TIMESTAMP '2026-04-23 16:00:00', 10, 'OPEN'),
+(3, TIMESTAMP '2026-04-23 16:00:00', TIMESTAMP '2026-04-23 17:00:00', 10, 'OPEN');
+
+
+INSERT INTO auctions (start_price, start_time, end_time, status, delivery_slot_id)
+VALUES
+(10.0, TIMESTAMP '2026-04-23 14:50:35', TIMESTAMP '2026-04-23 14:59:35', 'PENDING', 1),
+(20.0, TIMESTAMP '2026-04-23 15:00:00', TIMESTAMP '2026-04-23 15:10:00', 'OPEN', 2),
+(15.0, TIMESTAMP '2026-04-23 15:15:00', TIMESTAMP '2026-04-23 15:25:00', 'CLOSED', 3),
+(50.0, TIMESTAMP '2026-04-23 16:00:00', TIMESTAMP '2026-04-23 16:10:00', 'OPEN', 1),
+(5.0, TIMESTAMP '2026-04-23 16:15:00', TIMESTAMP '2026-04-23 16:20:00', 'PENDING', 2);
