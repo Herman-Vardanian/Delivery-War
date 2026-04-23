@@ -4,13 +4,13 @@ import { useLogin } from '../../controllers/useAuth';
 import AuthBg from '../components/AuthBg';
 
 export default function LoginPage() {
-  const [shopId, setShopId] = useState('');
+  const [storeId, setStoreId] = useState('');
   const [password, setPassword] = useState('');
   const { login, loading, error } = useLogin();
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    login(shopId, password);
+    login(storeId, password);
   };
 
   return (
@@ -18,6 +18,7 @@ export default function LoginPage() {
       <AuthBg />
       <Link to="/" className="auth-home-link">Delivery <span>War</span></Link>
       <main className="auth-main">
+
         {/* ── Branding ── */}
         <div className="branding">
           <div className="logo-block">
@@ -57,21 +58,21 @@ export default function LoginPage() {
 
           <form onSubmit={handleSubmit}>
             <div className="field">
-              <label className="field-label" htmlFor="shop-id">Identifiant magasin</label>
+              <label className="field-label" htmlFor="store-id">Identifiant magasin</label>
               <div className="field-wrap">
                 <input
                   className="field-input"
-                  id="shop-id"
+                  id="store-id"
                   type="text"
                   placeholder="EX. PARIS-NORD-07"
-                  value={shopId}
-                  onChange={(e) => setShopId(e.target.value)}
+                  value={storeId}
+                  onChange={(e) => setStoreId(e.target.value.toUpperCase())}
                   autoComplete="username"
                 />
                 <div className="field-icon">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                    <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
-                    <line x1="12" y1="12" x2="12" y2="16"/><circle cx="12" cy="12" r="1" fill="currentColor"/>
+                    <rect x="2" y="7" width="20" height="14" rx="2"/>
+                    <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
                   </svg>
                 </div>
               </div>
@@ -91,7 +92,8 @@ export default function LoginPage() {
                 />
                 <div className="field-icon">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                    <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    <rect x="3" y="11" width="18" height="11" rx="2"/>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                   </svg>
                 </div>
               </div>
@@ -108,24 +110,6 @@ export default function LoginPage() {
               <span className="btn-arrow">→</span>
             </button>
           </form>
-
-          <div className="divider">ou</div>
-
-          <button className="btn-whale-auth" type="button">
-            <div className="whale-stars">
-              {[1,2,3,4,5].map((i) => <div key={i} className="whale-star" />)}
-            </div>
-            🐋 Connexion Pass Whale — Accès VIP
-          </button>
-
-          <div className="admin-link-wrap">
-            <a className="admin-link" href="#">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-              </svg>
-              Accès administrateur plateforme
-            </a>
-          </div>
 
           <div style={{ textAlign: 'center', marginTop: '1.25rem', fontSize: '0.72rem', color: 'var(--c-text3)' }}>
             Pas encore de compte ?{' '}

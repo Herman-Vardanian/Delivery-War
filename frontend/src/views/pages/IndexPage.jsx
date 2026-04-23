@@ -154,7 +154,7 @@ export default function IndexPage() {
               <div className="fc-icon-wrap fc-whale" style={{ width: 52, height: 52, fontSize: '1.6rem' }}>🐋</div>
               <div className="fc-content">
                 <div className="fc-title" style={{ color: 'var(--c-whale-s)', fontSize: '1.15rem' }}>Pass Whale — Accès VIP exclusif</div>
-                <p className="fc-desc">Créneaux réservés inaccessibles aux comptes Standard. Jamais en file Tortue. Camion prioritaire. Support dédié 24/7. Pour ceux qui ne transigent pas avec la livraison.</p>
+                <p className="fc-desc">Créneaux réservés inaccessibles aux comptes Gratuit. Jamais en file Tortue. Camion prioritaire. Support dédié 24/7. Pour ceux qui ne transigent pas avec la livraison.</p>
               </div>
               <Link className="btn-plan-whale btn-plan" to="/register" style={{ width: 'auto', padding: '0.6rem 1.5rem', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>🐋 Activer le Pass</Link>
             </div>
@@ -166,7 +166,7 @@ export default function IndexPage() {
       <section className="section-plans" id="plans">
         <div className="section-eyebrow">Tarifs</div>
         <h2 className="section-title">Choisissez votre <span>arsenal</span></h2>
-        <p className="section-sub">Trois niveaux de puissance. Upgradeables à tout moment. Résiliables sans préavis.</p>
+        <p className="section-sub">Deux niveaux de puissance. Upgradeables à tout moment. Résiliables sans préavis.</p>
         <div className="plans-grid">
           <div className="plan-card-landing">
             <span className="plan-icon">🐢</span>
@@ -189,7 +189,6 @@ export default function IndexPage() {
             <div className="plan-period">/ mois · Essai 14 jours gratuits</div>
             <div className="plan-divider" />
             <ul className="plan-features-list">
-              <li><span className="pf-check whale">✓</span> Tout le plan Standard</li>
               <li><span className="pf-check whale">✓</span> Créneaux exclusifs VIP</li>
               <li><span className="pf-check whale">✓</span> Camion prioritaire garanti</li>
               <li><span className="pf-check whale">✓</span> Dashboard avancé temps réel</li>
@@ -208,7 +207,7 @@ export default function IndexPage() {
         <div className="proof-grid">
           {[
             { avatar: '🥐', quote: 'On a réduit nos délais de livraison de 40% depuis qu\'on utilise Delivery War. Le Pass Whale c\'est indispensable pour nous.', name: 'Jean Dupont', shop: 'Boulangerie Dupont · Paris 18e', badge: 'tb-whale', badgeLabel: '🐋 Whale' },
-            { avatar: '🧀', quote: 'L\'adrénaline des enchères c\'est vraiment addictif. Et quand on remporte un créneau au dernier moment, quelle satisfaction !', name: 'Claire Lefebvre', shop: 'Fromagerie Lefebvre · Paris 5e', badge: 'tb-std', badgeLabel: 'Standard' },
+            { avatar: '🧀', quote: 'L\'adrénaline des enchères c\'est vraiment addictif. Et quand on remporte un créneau au dernier moment, quelle satisfaction !', name: 'Claire Lefebvre', shop: 'Fromagerie Lefebvre · Paris 5e', badge: 'tb-whale', badgeLabel: '🐋 Whale' },
             { avatar: '🛒', quote: 'Le classement Pigeon d\'Or nous motive à enchérir plus. On veut absolument rester dans le Top 3 ce mois-ci !', name: 'Samir Martin', shop: 'Épicerie Martin · Paris 11e', badge: 'tb-gold', badgeLabel: '🕊️ Pigeon #2' },
           ].map(({ avatar, quote, name, shop, badge, badgeLabel }) => (
             <div key={name} className="testimonial">
