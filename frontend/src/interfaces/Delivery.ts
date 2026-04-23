@@ -16,3 +16,8 @@ export enum DeliveryStatus {
     DELIVERED = 'DELIVERED',
     CANCELLED = 'CANCELLED',
 }
+
+export type CreateDelivery = {
+    storeId: string,
+    deliverySlotId: string,
+}

@@ -12,3 +12,12 @@ export interface Auction {
     status: AuctionStatus;
     deliverySlotId?: number | null;
 }
+
+
+export type CreateAuction = {
+    startPrice: string,
+    startTime: string, // ISO FORMAT
+    "endTime":string, // ISO FORMAT
+    "status": AuctionStatus,
+    "deliverySlotId": number
+}

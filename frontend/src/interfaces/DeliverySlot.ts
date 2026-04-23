@@ -12,3 +12,6 @@ export enum DeliverySlotStatus {
     PENDING = "PENDING",
     CLOSE = "CLOSE"
 }
+
+
+export type CreateDeliverySlot = DeliverySlot

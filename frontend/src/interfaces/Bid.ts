@@ -1,3 +1,6 @@
+import {Store} from "./Store"
+import {Auction} from "./Auction"
+
 export enum BidStatus {
     WON = 'WON',
     OUTBID = 'OUTBID',
@@ -6,9 +9,14 @@ export enum BidStatus {
 export interface Bid {
     id: number;
     amount: number;
-    timestamp?: string;
-    status?: string;
-    storeId: number;
-    auctionId: number;
-    storeName?: string;
+    timestamp: string;
+    status: BidStatus;
+    store: Store;
+    auction: Auction;
+}
+
+export type CreateBid = {
+    storeId: string,
+    auctionId: string,
+    status: BidStatus,
 }
