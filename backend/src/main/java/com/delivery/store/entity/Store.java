@@ -17,6 +17,7 @@ public class Store {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(unique = true, nullable = false)
     private String name;
 
     private String password;
@@ -24,6 +25,7 @@ public class Store {
     @Enumerated(EnumType.STRING)
     private Role role;
 
+    @Column(unique = true, nullable = false)
     private String email;
 
     private String address;
