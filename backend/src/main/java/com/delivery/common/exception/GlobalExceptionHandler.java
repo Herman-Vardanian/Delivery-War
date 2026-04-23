@@ -65,4 +65,32 @@ public class GlobalExceptionHandler {
                         "Une erreur inattendue est survenue", request.getRequestURI()),
                 HttpStatus.INTERNAL_SERVER_ERROR);
     }
+
+    @ExceptionHandler(InsufficientBalanceException.class)
+    public ResponseEntity<Map<String, Object>> handleInsufficientBalance(
+            InsufficientBalanceException ex,
+            HttpServletRequest request) {
+
+        return new ResponseEntity<>(
+                buildBody(
+                        HttpStatus.BAD_REQUEST,
+                        "Insufficient Balance",
+                        ex.getMessage(),
+                        request.getRequestURI()),
+                HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<Map<String, Object>> handleIllegalState(
+            IllegalStateException ex,
+            HttpServletRequest request) {
+
+        return new ResponseEntity<>(
+                buildBody(
+                        HttpStatus.BAD_REQUEST,
+                        "Business Rule Violation",
+                        ex.getMessage(),
+                        request.getRequestURI()),
+                HttpStatus.BAD_REQUEST);
+    }
 }
