@@ -112,7 +112,6 @@ Les repositories ne contiennent pas de logique métier.
 
 ---
 
-
 # MCD — Delivery War
 
 ## Contexte
