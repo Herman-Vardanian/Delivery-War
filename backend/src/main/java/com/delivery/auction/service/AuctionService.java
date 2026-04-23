@@ -9,6 +9,7 @@ import com.delivery.common.exception.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -54,8 +55,8 @@ public class AuctionService {
                 .orElseThrow(() -> new ResourceNotFoundException("Auction not found with id: " + id));
 
         auction.setStartPrice(dto.getStartPrice());
-        auction.setStartTime(dto.getStartTime());
-        auction.setEndTime(dto.getEndTime());
+        auction.setStartTime(LocalDateTime.parse(dto.getStartTime()));
+        auction.setEndTime(LocalDateTime.parse(dto.getEndTime()));
         auction.setStatus(dto.getStatus());
 
         Auction saved = repository.save(auction);
