@@ -78,6 +78,14 @@ public class StoreService {
         return mapper.toDto(saved);
     }
 
+    public StoreDto login(String name, String password) {
+        Store store = repository.findByName(name)
+                .orElseThrow(() -> new IllegalArgumentException("Identifiants incorrects."));
+        if (!password.equals(store.getPassword()))
+            throw new IllegalArgumentException("Identifiants incorrects.");
+        return mapper.toDto(store);
+    }
+
     public void deleteStore(Long id) {
         Store existing = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Store not found: " + id));

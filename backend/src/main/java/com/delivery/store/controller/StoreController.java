@@ -29,6 +29,11 @@ public class StoreController {
         return ResponseEntity.ok(created);
     }
 
+    @PostMapping("/login")
+    public ResponseEntity<StoreDto> login(@RequestBody StoreDto dto) {
+        return ResponseEntity.ok(storeService.login(dto.getName(), dto.getPassword()));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<StoreDto> getStore(@PathVariable Long id) {
         return ResponseEntity.ok(storeService.getStore(id));
