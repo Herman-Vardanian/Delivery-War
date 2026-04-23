@@ -14,3 +14,9 @@ export interface Bid {
     store: Store;
     auction: Auction;
 }
+
+export type CreateBid = {
+    storeId: string,
+    auctionId: string,
+    status: BidStatus,
+}

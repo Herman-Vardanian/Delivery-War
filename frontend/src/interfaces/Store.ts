@@ -16,3 +16,13 @@ export interface Store {
     "whalePass": boolean,
     "passId": string | null
 }
+
+export type CreateStore = {
+    "name": string,
+    "password": string,
+    "email": string,
+    "address": string,
+    "balance": number,
+    "whalePass": boolean,
+    "passId": string | null
+}
