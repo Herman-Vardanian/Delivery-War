@@ -17,7 +17,9 @@ export default function LeaderboardPage() {
         return r.json() as Promise<Store[]>;
       })
       .then((data) => {
-        const sorted = [...data].sort((a, b) => (b.totalSpent ?? 0) - (a.totalSpent ?? 0));
+        const sorted = [...data]
+          .filter((s) => s.role !== 'ADMIN')
+          .sort((a, b) => (b.totalSpent ?? 0) - (a.totalSpent ?? 0));
         setStores(sorted);
       })
       .catch((e: unknown) => setError(e instanceof Error ? e.message : 'Erreur inconnue'))
@@ -25,7 +27,7 @@ export default function LeaderboardPage() {
   }, []);
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--c-bg)', padding: '3rem 1.5rem' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--c-bg)', padding: '5rem 1.5rem 3rem' }}>
       <div style={{ maxWidth: 700, margin: '0 auto' }}>
 
         {/* ── Header ── */}
