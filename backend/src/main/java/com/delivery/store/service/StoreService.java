@@ -60,6 +60,10 @@ public class StoreService {
                 // ignore invalid role
             }
         }
+        if (dto.getEmail() != null)
+            existing.setEmail(dto.getEmail());
+        if (dto.getAddress() != null)
+            existing.setAddress(dto.getAddress());
         if (dto.getBalance() != null)
             existing.setBalance(dto.getBalance());
         if (dto.getReservedBalance() != null)
