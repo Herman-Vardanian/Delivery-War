@@ -9,7 +9,7 @@ import {api} from "./utils"
 
 
 export const leaderboard = {
-    all: (params?: any) => api.get<LeaderboardStore[]>('/leaderboard', params),
+    all: () => api.get<Leaderboard>('/leaderboard'),
 };
 export const auctions = {
     // Auctions
@@ -72,7 +72,7 @@ export const stores = {
     byId: (id: number) => api.get<Store>(`/stores/${id}`),
 
     // Auth (remplace authModel)
-    create: (data: Store) => api.post<Store>('/stores'),
+    create: (data: Store) => api.post<Store>('/stores', data),
     login: (name: string, password: string) => api.post<Store>('/stores/login', { name, password }),
 
     // Mutations

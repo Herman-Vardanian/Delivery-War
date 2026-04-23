@@ -8,7 +8,7 @@ export interface DeliverySlot {
 }
 
 export enum DeliverySlotStatus {
-    OPEN,
-    PENDING,
-    CLOSE
+    OPEN= "OPEN",
+    PENDING = "PENDING",
+    CLOSE = "CLOSE"
 }

@@ -1,3 +1,3 @@
 import {Store} from "./Store"
 
-type Leaderboard = Store[]
+export type Leaderboard = Store[]
