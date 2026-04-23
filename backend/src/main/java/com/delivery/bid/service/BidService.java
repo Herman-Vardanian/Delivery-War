@@ -89,4 +89,19 @@ public class BidService {
         return repository.findTopByAuctionIdOrderByAmountDesc(auctionId)
                 .map(mapper::toDto);
     }
+    
+    public List<BidDto> getLeaderboardByAuction(Long auctionId) {
+        // Verify auction exists first
+        if (!auctionRepository.existsById(auctionId)) {
+            throw new ResourceNotFoundException("Auction not found: " + auctionId);
+        }
+        
+        List<Bid> bids = repository.findLeaderboardByAuctionId(auctionId);
+        return mapper.toDtoList(bids);
+    }
+    
+    public List<BidDto> getGlobalLeaderboard() {
+        List<Bid> bids = repository.findGlobalLeaderboard();
+        return mapper.toDtoList(bids);
+    }
 }
