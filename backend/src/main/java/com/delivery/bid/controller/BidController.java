@@ -34,23 +34,4 @@ public class BidController {
     public ResponseEntity<List<BidDto>> listBids() {
         return ResponseEntity.ok(bidService.listBids());
     }
-
-    @GetMapping("/auction/{auctionId}")
-    public ResponseEntity<List<BidDto>> getBidsByAuction(@PathVariable Long auctionId) {
-        List<BidDto> bids = bidService.getBidsByAuction(auctionId);
-        return ResponseEntity.ok(bids);
-    }
-
-    @GetMapping("/store/{storeId}")
-    public ResponseEntity<List<BidDto>> getBidsByStore(@PathVariable Long storeId) {
-        List<BidDto> bids = bidService.getBidsByStore(storeId);
-        return ResponseEntity.ok(bids);
-    }
-
-    @GetMapping("/auction/{auctionId}/highest")
-    public ResponseEntity<BidDto> getHighestBid(@PathVariable Long auctionId) {
-        Optional<BidDto> highestBid = bidService.getHighestBid(auctionId);
-        return highestBid.map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
 }
