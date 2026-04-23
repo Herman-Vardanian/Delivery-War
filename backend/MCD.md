@@ -190,16 +190,6 @@ Représente une livraison à effectuer.
 
 ---
 
-### Route
-
-Représente une tournée de livraison.
-
-* id (PK)
-* type (NORMAL, TORTUE)
-* capacity
-
----
-
 ## Relations
 
 ### Store — Bid
@@ -244,14 +234,6 @@ Un magasin possède plusieurs livraisons.
 
 ---
 
-### Route — Delivery
-
-Une tournée regroupe plusieurs livraisons.
-
-* Route (1) —— (N) Delivery
-
----
-
 ## Vue simplifiée
 
 ```text
@@ -261,7 +243,6 @@ Store (1) ──── (N) Bid (N) ──── (1) Auction (1) ──── (1)
    │
    └────────────── (N) Delivery
 
-Route (1) ──── (N) Delivery
 ```
 
 ---
@@ -273,7 +254,6 @@ Route (1) ──── (N) Delivery
 * Une Auction est limitée dans le temps
 * Le Bid le plus élevé remporte l’enchère
 * Un DeliverySlot a une capacité maximale
-* Les tournées de type TORTUE sont limitées (petits camions)
 * Le classement “Pigeon d’or” est basé sur `totalSpent`
 
 ---
