@@ -9,7 +9,6 @@ import com.delivery.delivery.repository.DeliveryRepository;
 import com.delivery.store.entity.Store;
 import com.delivery.store.repository.StoreRepository;
 import com.delivery.deliverySlot.entity.DeliverySlot;
-import com.delivery.deliverySlot.entity.DeliverySlotId;
 import com.delivery.deliverySlot.repository.DeliverySlotRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
