@@ -3,6 +3,7 @@ import IndexPage from '../views/pages/IndexPage';
 import LoginPage from '../views/pages/LoginPage';
 import RegisterPage from '../views/pages/RegisterPage';
 import ProfilePage from '../views/pages/ProfilePage';
+import DashboardPage from '../views/pages/DashboardPage';
 import Navbar from '../views/components/Navbar';
 import AppNavbar from '../views/components/AppNavbar';
 
@@ -50,6 +51,14 @@ export default function AppRouter() {
             <PublicLayout showNav={false}>
               <RegisterPage />
             </PublicLayout>
+          }
+        />
+        <Route
+          path="/dashboard"
+          element={
+            <AppLayout>
+              <DashboardPage />
+            </AppLayout>
           }
         />
         <Route

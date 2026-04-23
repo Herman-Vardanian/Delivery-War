@@ -34,19 +34,19 @@ export default function AppNavbar() {
         Delivery <span style={{ color: 'var(--c-pri)' }}>War</span>
       </Link>
 
-      <nav style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', flex: 1 }}>
-        <Link to="/dashboard" style={linkStyle('/dashboard')}>
-          <span style={{ marginRight: '0.35rem' }}>⚡</span>Dashboard
-        </Link>
-        <Link to="/profile" style={linkStyle('/profile')}>
-          <span style={{ marginRight: '0.35rem' }}>🏪</span>Mon compte
-        </Link>
-      </nav>
+      <div style={{ flex: 1 }} />
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-        <div style={{ fontSize: '0.75rem', color: 'var(--c-text3)', borderRight: '1px solid var(--c-border)', paddingRight: '0.75rem', lineHeight: 1.3 }}>
-          <div style={{ color: 'var(--c-text2)', fontWeight: 600 }}>PARIS-NORD-07</div>
-          <div style={{ fontSize: '0.68rem' }}>Gratuit</div>
+        <nav style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+          <Link to="/dashboard" style={linkStyle('/dashboard')}>Dashboard</Link>
+          <Link to="/profile" style={linkStyle('/profile')}>Mon compte</Link>
+        </nav>
+        <div style={{ fontSize: '0.75rem', color: 'var(--c-text3)', borderRight: '1px solid var(--c-border)', paddingRight: '0.75rem', lineHeight: 1.4, display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div>
+            <div style={{ color: 'var(--c-text2)', fontWeight: 600 }}>PARIS-NORD-07</div>
+            <div style={{ fontSize: '0.68rem' }}>Gratuit</div>
+          </div>
+          <div style={{ fontWeight: 800, fontSize: '0.9rem', color: 'var(--c-success)' }}>€ 0,00</div>
         </div>
         <Link
           to="/login"
