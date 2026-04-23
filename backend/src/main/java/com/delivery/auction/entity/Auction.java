@@ -26,7 +26,7 @@ public class Auction {
     private LocalDateTime endTime;
 
     @Enumerated(EnumType.STRING)
-    private Status status;
+    private AuctionStatus status;
 
     /*@Embedded
     private Long deliverySlotId;*/

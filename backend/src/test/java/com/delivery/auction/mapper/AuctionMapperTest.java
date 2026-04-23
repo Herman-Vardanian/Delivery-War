@@ -2,7 +2,7 @@ package com.delivery.auction.mapper;
 
 import com.delivery.auction.dto.AuctionDto;
 import com.delivery.auction.entity.Auction;
-import com.delivery.auction.entity.Status;
+import com.delivery.auction.entity.AuctionStatus;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
@@ -23,7 +23,7 @@ public class AuctionMapperTest {
                 .startPrice(12.5f)
                 .startTime(start)
                 .endTime(end)
-                .status(Status.OPEN)
+                .status(AuctionStatus.OPEN)
                 .build();
 
         AuctionDto dto = mapper.toDto(a);
