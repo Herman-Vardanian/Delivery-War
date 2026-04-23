@@ -1,9 +1,7 @@
 package com.delivery.leaderboard.controller;
 
-import com.delivery.leaderboard.controller.LeaderboardController;
 import com.delivery.store.dto.StoreDto;
 import com.delivery.store.service.StoreService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -23,9 +21,6 @@ public class LeaderboardControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
-
-    @Autowired
-    private ObjectMapper objectMapper;
 
     @MockBean
     private StoreService storeService;
