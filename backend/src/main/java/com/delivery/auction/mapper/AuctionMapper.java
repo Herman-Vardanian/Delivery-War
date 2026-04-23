@@ -15,14 +15,16 @@ public class AuctionMapper {
             return null;
         }
 
+        DeliverySlot slot = a.getDeliverySlot();
         return AuctionDto.builder()
                 .id(a.getId())
                 .startPrice(a.getStartPrice())
                 .startTime(a.getStartTime() != null ? a.getStartTime().toString() : null)
                 .endTime(a.getEndTime() != null ? a.getEndTime().toString() : null)
                 .status(a.getStatus())
-                .deliverySlotId(
-                        a.getDeliverySlot() != null ? a.getDeliverySlot().getId() : null)
+                .deliverySlotId(slot != null ? slot.getId() : null)
+                .slotStartTime(slot != null && slot.getStartTime() != null ? slot.getStartTime().toString() : null)
+                .slotEndTime(slot != null && slot.getEndTime() != null ? slot.getEndTime().toString() : null)
                 .build();
     }
 

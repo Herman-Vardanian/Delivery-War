@@ -1,13 +1,13 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { authModel } from '../../models/authModel';
-import { auctions as auctionsApi, bids as bidsApi } from '../../controllers/endpoints';
+import { auctions as auctionsApi, bids as bidsApi, stores as storesApi } from '../../controllers/endpoints';
 import { api } from '../../controllers/utils';
 import type { Auction as BackendAuction } from '../../interfaces/Auction';
 import type { Bid } from '../../interfaces/Bid';
 import type { DeliverySlot } from '../../interfaces/DeliverySlot';
 import { AuctionStatus } from '../../interfaces/Auction';
 
-type DisplayStatus = 'leading' | 'outbid' | 'open' | 'won' | 'lost';
+type DisplayStatus = 'leading' | 'outbid' | 'open' | 'pending' | 'won' | 'lost';
 
 interface DisplayAuction {
   id: number;
@@ -41,6 +41,7 @@ const STATUS_CONFIG = {
   leading: { label: 'En tête',     color: 'var(--c-success)',   bg: 'rgba(72,199,142,.1)',   border: 'rgba(72,199,142,.25)' },
   outbid:  { label: 'Surenchéri',  color: 'var(--c-danger)',    bg: 'rgba(255,77,77,.1)',     border: 'rgba(255,77,77,.25)' },
   open:    { label: 'Disponible',  color: 'var(--c-pri)',       bg: 'rgba(255,107,26,.08)',   border: 'rgba(255,107,26,.2)' },
+  pending: { label: 'À venir',     color: 'var(--c-text3)',    bg: 'rgba(255,255,255,.04)',  border: 'var(--c-border)' },
   won:     { label: '🏆 Remporté', color: 'var(--c-gold-s)',   bg: 'rgba(255,193,7,.08)',    border: 'rgba(255,193,7,.2)' },
   lost:    { label: 'Perdu',       color: 'var(--c-text3)',    bg: 'rgba(255,255,255,.04)',  border: 'var(--c-border)' },
 };
@@ -63,19 +64,26 @@ function buildAuction(
   userId: number | undefined,
 ): DisplayAuction {
   const now = Date.now();
+  const startMs = a.startTime ? new Date(a.startTime + 'Z').getTime() : now;
   const endMs = a.endTime ? new Date(a.endTime + 'Z').getTime() : now;
-  const isActive = endMs > now && a.status !== AuctionStatus.CLOSED;
+  const notStarted = startMs > now;
   const currentBid = highest?.amount ?? a.startPrice ?? 0;
-  const slot = a.startTime && a.endTime ? `${fmtHour(a.startTime)}–${fmtHour(a.endTime)}` : '—';
+  const slot = a.slotStartTime && a.slotEndTime
+    ? `${fmtHour(a.slotStartTime)}–${fmtHour(a.slotEndTime)}`
+    : a.startTime && a.endTime ? `${fmtHour(a.startTime)}–${fmtHour(a.endTime)}` : '—';
   const myBidEntry = userBidMap.get(a.id);
   const myBid = myBidEntry?.amount ?? null;
   const isLeading = highest?.storeId === userId;
 
+  const finished = endMs <= now || a.status === AuctionStatus.CLOSED;
+
   let status: DisplayStatus;
-  if (!isActive) {
+  if (finished && !notStarted) {
     status = isLeading ? 'won' : 'lost';
   } else if (isLeading) {
     status = 'leading';
+  } else if (notStarted) {
+    status = 'pending';
   } else if (myBid !== null) {
     status = 'outbid';
   } else {
@@ -102,7 +110,7 @@ interface NewAuctionForm {
 }
 
 export default function DashboardPage() {
-  const user = authModel.getUser();
+  const [user, setUser] = useState(authModel.getUser());
   const storeName = user?.name || '—';
   const isAdmin = user?.role === 'ADMIN';
 
@@ -147,6 +155,15 @@ export default function DashboardPage() {
       );
       setAuctions(withBids);
       setError('');
+
+      if (user?.id) {
+        try {
+          const fresh = await storesApi.byId(user.id);
+          setUser(fresh);
+          authModel.saveUser(fresh);
+          window.dispatchEvent(new Event('user-updated'));
+        } catch { /* keep local balance on network error */ }
+      }
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Erreur inconnue');
     } finally {
@@ -158,7 +175,7 @@ export default function DashboardPage() {
     void loadAuctions();
     const id = setInterval(() => {
       if (!pauseRefresh.current) void loadAuctions();
-    }, 10000);
+    }, 5000);
     return () => clearInterval(id);
   }, [loadAuctions]);
 
@@ -223,8 +240,9 @@ export default function DashboardPage() {
     }
   };
 
-  const active  = auctions.filter((a) => a.status === 'leading' || a.status === 'outbid' || a.status === 'open');
-  const closed  = auctions.filter((a) => a.status === 'won' || a.status === 'lost');
+  const active   = auctions.filter((a) => a.status === 'leading' || a.status === 'outbid' || a.status === 'open');
+  const upcoming = auctions.filter((a) => a.status === 'pending');
+  const closed   = auctions.filter((a) => a.status === 'won' || a.status === 'lost');
   const leading = auctions.filter((a) => a.status === 'leading').length;
   const outbid  = auctions.filter((a) => a.status === 'outbid').length;
 
@@ -385,6 +403,29 @@ export default function DashboardPage() {
         {!loading && active.length === 0 && !error && (
           <div style={{ textAlign: 'center', color: 'var(--c-text3)', padding: '3rem', fontSize: '0.85rem', background: 'var(--c-surf)', border: '1px solid var(--c-border)', borderRadius: 12 }}>
             Aucune enchère en cours pour le moment.
+          </div>
+        )}
+
+        {/* ── Enchères à venir ── */}
+        {!loading && upcoming.length > 0 && (
+          <div style={{ marginTop: '1.25rem' }}>
+            <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--c-text2)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.875rem' }}>
+              À venir
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              {upcoming.map((a) => (
+                <div key={a.id} style={{ background: 'var(--c-surf)', border: '1px solid var(--c-border)', borderRadius: 10, padding: '0.875rem 1.25rem', display: 'grid', gridTemplateColumns: '1fr auto auto', alignItems: 'center', gap: '1.5rem', opacity: 0.65 }}>
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--c-text)', marginBottom: '0.15rem' }}>{`Enchère #${a.id}`}</div>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--c-text3)' }}>Début {a.slot}</div>
+                  </div>
+                  <div style={{ fontWeight: 700, fontSize: '0.88rem', color: 'var(--c-text3)' }}>€ {a.currentBid}</div>
+                  <span style={{ fontSize: '0.65rem', fontWeight: 700, padding: '0.2rem 0.75rem', borderRadius: 20, background: STATUS_CONFIG.pending.bg, border: `1px solid ${STATUS_CONFIG.pending.border}`, color: STATUS_CONFIG.pending.color }}>
+                    {STATUS_CONFIG.pending.label}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 

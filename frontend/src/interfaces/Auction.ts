@@ -11,6 +11,8 @@ export interface Auction {
     endTime?: string | null;
     status: AuctionStatus;
     deliverySlotId?: number | null;
+    slotStartTime?: string | null;
+    slotEndTime?: string | null;
 }
 
 

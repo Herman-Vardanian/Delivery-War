@@ -17,4 +17,6 @@ public class AuctionDto {
     private String endTime;
     private AuctionStatus status;
     private Long deliverySlotId;
+    private String slotStartTime;
+    private String slotEndTime;
 }
