@@ -19,7 +19,7 @@ interface DisplayAuction {
 }
 
 function Timer({ endTime }: { endTime: string }) {
-  const calc = () => Math.max(0, Math.floor((new Date(endTime).getTime() - Date.now()) / 1000));
+  const calc = () => Math.max(0, Math.floor((new Date(endTime + 'Z').getTime() - Date.now()) / 1000));
   const [s, setS] = useState(calc);
   useEffect(() => {
     const id = setInterval(() => setS(calc), 1000);
@@ -46,15 +46,14 @@ const STATUS_CONFIG = {
 };
 
 function fmtHour(iso: string): string {
-  const d = new Date(iso);
+  const d = new Date(iso + 'Z');
   const h = d.getHours();
   const min = d.getMinutes();
   return `${h}h${min > 0 ? String(min).padStart(2, '0') : ''}`;
 }
 
 function toIsoLocal(date: Date): string {
-  const p = (n: number) => String(n).padStart(2, '0');
-  return `${date.getFullYear()}-${p(date.getMonth() + 1)}-${p(date.getDate())}T${p(date.getHours())}:${p(date.getMinutes())}:${p(date.getSeconds())}`;
+  return date.toISOString().slice(0, 19);
 }
 
 function buildAuction(
@@ -64,7 +63,7 @@ function buildAuction(
   userId: number | undefined,
 ): DisplayAuction {
   const now = Date.now();
-  const endMs = a.endTime ? new Date(a.endTime).getTime() : now;
+  const endMs = a.endTime ? new Date(a.endTime + 'Z').getTime() : now;
   const isActive = endMs > now && a.status !== AuctionStatus.CLOSED;
   const currentBid = highest?.amount ?? a.startPrice ?? 0;
   const slot = a.startTime && a.endTime ? `${fmtHour(a.startTime)}–${fmtHour(a.endTime)}` : '—';
@@ -343,12 +342,15 @@ export default function DashboardPage() {
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
                           <div style={{ display: 'flex', gap: '0.4rem' }}>
                             <input type="number" min={a.currentBid + 1} placeholder={`> ${a.currentBid} €`}
+                              disabled={a.status === 'leading'}
                               value={bidInputs[a.id] || ''}
                               onChange={(e) => setBidInputs((p) => ({ ...p, [a.id]: e.target.value }))}
-                              style={{ flex: 1, minWidth: 0, background: 'var(--c-bg)', border: '1px solid var(--c-border)', borderRadius: 6, padding: '0.35rem 0.5rem', fontSize: '0.78rem', color: 'var(--c-text)', outline: 'none' }}
+                              style={{ flex: 1, minWidth: 0, background: 'var(--c-bg)', border: '1px solid var(--c-border)', borderRadius: 6, padding: '0.35rem 0.5rem', fontSize: '0.78rem', color: a.status === 'leading' ? 'var(--c-text3)' : 'var(--c-text)', outline: 'none', opacity: a.status === 'leading' ? 0.5 : 1 }}
                             />
-                            <button onClick={() => void placeBid(a)}
-                              style={{ padding: '0.35rem 0.75rem', background: 'var(--c-pri)', border: 'none', borderRadius: 6, color: '#fff', fontWeight: 700, fontSize: '0.75rem', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                            <button
+                              onClick={() => void placeBid(a)}
+                              disabled={a.status === 'leading'}
+                              style={{ padding: '0.35rem 0.75rem', background: a.status === 'leading' ? 'var(--c-border)' : 'var(--c-pri)', border: 'none', borderRadius: 6, color: a.status === 'leading' ? 'var(--c-text3)' : '#fff', fontWeight: 700, fontSize: '0.75rem', cursor: a.status === 'leading' ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap' }}
                             >
                               Enchérir
                             </button>
