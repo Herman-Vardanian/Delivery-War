@@ -111,6 +111,21 @@ export default function DashboardPage() {
   const [filterRegion,    setFilterRegion]    = useState('');
   const [filterMinAmount, setFilterMinAmount] = useState('');
   const [filterMaxAmount, setFilterMaxAmount] = useState('');
+  const [filterStatus,    setFilterStatus]    = useState<'all' | 'active' | 'upcoming' | 'closed' | 'leading' | 'outbid'>('all');
+
+  interface OutbidNotif { id: number; auctionId: number; newAmount: number; }
+  const [notifs, setNotifs] = useState<OutbidNotif[]>([]);
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const { auctionId, newAmount } = (e as CustomEvent<{ auctionId: number; newAmount: number }>).detail;
+      const id = Date.now();
+      setNotifs(prev => [...prev, { id, auctionId, newAmount }]);
+      setTimeout(() => setNotifs(prev => prev.filter(n => n.id !== id)), 6000);
+    };
+    window.addEventListener('auction-outbid', handler);
+    return () => window.removeEventListener('auction-outbid', handler);
+  }, []);
 
   const createAuction = async () => {
     if (!newAuction.deliveryDate)      { setCreateError('La date de livraison est requise.'); return; }
@@ -161,10 +176,13 @@ export default function DashboardPage() {
     }
   };
 
+  const minBid = (currentBid: number) => Math.ceil(currentBid * 1.05 * 100) / 100;
+
   const placeBid = async (auctionId: number, currentBid: number) => {
     const amount = parseFloat(bidInputs[auctionId] ?? '');
-    if (!amount || amount <= currentBid) {
-      setBidErrors(p => ({ ...p, [auctionId]: `Montant doit être > ${currentBid} €` }));
+    const min = minBid(currentBid);
+    if (!amount || amount < min) {
+      setBidErrors(p => ({ ...p, [auctionId]: `Minimum +5% — enchère min : ${min.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €` }));
       return;
     }
     if (!user?.id) return;
@@ -191,7 +209,14 @@ export default function DashboardPage() {
   const closed   = applyFilters(auctions.filter(a => a.status === 'won' || a.status === 'lost'));
   const leading  = auctions.filter(a => a.status === 'leading').length;
   const outbid   = auctions.filter(a => a.status === 'outbid').length;
-  const hasFilters = !!(filterDate || filterRegion || filterMinAmount || filterMaxAmount);
+  const hasFilters = !!(filterDate || filterRegion || filterMinAmount || filterMaxAmount || filterStatus !== 'all');
+
+  const displayActive = filterStatus === 'leading' ? active.filter(a => a.status === 'leading')
+                      : filterStatus === 'outbid'  ? active.filter(a => a.status === 'outbid')
+                      : active;
+  const showActive   = filterStatus === 'all' || filterStatus === 'active' || filterStatus === 'leading' || filterStatus === 'outbid';
+  const showUpcoming = filterStatus === 'all' || filterStatus === 'upcoming';
+  const showClosed   = filterStatus === 'all' || filterStatus === 'closed';
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--c-bg)', padding: '2rem 1.5rem' }}>
@@ -304,41 +329,70 @@ export default function DashboardPage() {
 
         {/* ── Filtres ── */}
         {!loading && (
-          <div style={{ background: 'var(--c-surf)', border: '1px solid var(--c-border)', borderRadius: 10, padding: '0.875rem 1.25rem', marginBottom: '1.25rem', display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'flex-end' }}>
-            <div>
-              <div style={{ fontSize: '0.62rem', color: 'var(--c-text3)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '0.25rem' }}>Date de livraison</div>
-              <input type="date" value={filterDate} onChange={e => setFilterDate(e.target.value)}
-                style={{ background: 'var(--c-bg)', border: '1px solid var(--c-border)', borderRadius: 6, padding: '0.35rem 0.6rem', fontSize: '0.8rem', color: filterDate ? 'var(--c-text)' : 'var(--c-text3)', outline: 'none', colorScheme: 'dark' }}
-              />
+          <div style={{ background: 'var(--c-surf)', border: '1px solid var(--c-border)', borderRadius: 10, padding: '0.875rem 1.25rem', marginBottom: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            {/* Pills état */}
+            <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+              {([
+                { key: 'all',      label: 'Tout',        dot: null },
+                { key: 'active',   label: 'En cours',    dot: 'var(--c-success)' },
+                { key: 'leading',  label: 'En tête',     dot: 'var(--c-success)' },
+                { key: 'outbid',   label: 'Surenchéri',  dot: 'var(--c-danger)' },
+                { key: 'upcoming', label: 'À venir',     dot: 'var(--c-text3)' },
+                { key: 'closed',   label: 'Terminées',   dot: 'var(--c-pri)' },
+              ] as const).map(({ key, label, dot }) => {
+                const sel = filterStatus === key;
+                return (
+                  <button key={key} onClick={() => setFilterStatus(key)} style={{
+                    display: 'flex', alignItems: 'center', gap: '0.35rem',
+                    padding: '0.3rem 0.8rem', borderRadius: 20, fontSize: '0.78rem', fontWeight: 600,
+                    cursor: 'pointer', border: '1px solid',
+                    borderColor: sel ? 'var(--c-pri)' : 'var(--c-border)',
+                    background: sel ? 'rgba(255,107,26,.12)' : 'var(--c-bg)',
+                    color: sel ? 'var(--c-pri)' : 'var(--c-text3)',
+                  }}>
+                    {dot && <span style={{ width: 6, height: 6, borderRadius: '50%', background: dot, flexShrink: 0 }} />}
+                    {label}
+                  </button>
+                );
+              })}
             </div>
-            <div>
-              <div style={{ fontSize: '0.62rem', color: 'var(--c-text3)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '0.25rem' }}>Région</div>
-              <select value={filterRegion} onChange={e => setFilterRegion(e.target.value)}
-                style={{ background: 'var(--c-bg)', border: '1px solid var(--c-border)', borderRadius: 6, padding: '0.35rem 0.6rem', fontSize: '0.8rem', color: filterRegion ? 'var(--c-text)' : 'var(--c-text3)', outline: 'none' }}
-              >
-                <option value="">Toutes les régions</option>
-                {FRENCH_REGIONS.map(r => <option key={r} value={r}>{r}</option>)}
-              </select>
+            {/* Autres filtres */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'flex-end' }}>
+              <div>
+                <div style={{ fontSize: '0.62rem', color: 'var(--c-text3)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '0.25rem' }}>Date de livraison</div>
+                <input type="date" value={filterDate} onChange={e => setFilterDate(e.target.value)}
+                  style={{ background: 'var(--c-bg)', border: '1px solid var(--c-border)', borderRadius: 6, padding: '0.35rem 0.6rem', fontSize: '0.8rem', color: filterDate ? 'var(--c-text)' : 'var(--c-text3)', outline: 'none', colorScheme: 'dark' }}
+                />
+              </div>
+              <div>
+                <div style={{ fontSize: '0.62rem', color: 'var(--c-text3)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '0.25rem' }}>Région</div>
+                <select value={filterRegion} onChange={e => setFilterRegion(e.target.value)}
+                  style={{ background: 'var(--c-bg)', border: '1px solid var(--c-border)', borderRadius: 6, padding: '0.35rem 0.6rem', fontSize: '0.8rem', color: filterRegion ? 'var(--c-text)' : 'var(--c-text3)', outline: 'none' }}
+                >
+                  <option value="">Toutes les régions</option>
+                  {FRENCH_REGIONS.map(r => <option key={r} value={r}>{r}</option>)}
+                </select>
+              </div>
+              <div>
+                <div style={{ fontSize: '0.62rem', color: 'var(--c-text3)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '0.25rem' }}>Mise min (€)</div>
+                <input type="number" min={0} placeholder="0" value={filterMinAmount} onChange={e => setFilterMinAmount(e.target.value)}
+                  style={{ width: 90, background: 'var(--c-bg)', border: '1px solid var(--c-border)', borderRadius: 6, padding: '0.35rem 0.6rem', fontSize: '0.8rem', color: 'var(--c-text)', outline: 'none' }}
+                />
+              </div>
+              <div>
+                <div style={{ fontSize: '0.62rem', color: 'var(--c-text3)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '0.25rem' }}>Mise max (€)</div>
+                <input type="number" min={0} placeholder="∞" value={filterMaxAmount} onChange={e => setFilterMaxAmount(e.target.value)}
+                  style={{ width: 90, background: 'var(--c-bg)', border: '1px solid var(--c-border)', borderRadius: 6, padding: '0.35rem 0.6rem', fontSize: '0.8rem', color: 'var(--c-text)', outline: 'none' }}
+                />
+              </div>
+              {hasFilters && (
+                <button onClick={() => { setFilterDate(''); setFilterRegion(''); setFilterMinAmount(''); setFilterMaxAmount(''); setFilterStatus('all'); }}
+                  style={{ padding: '0.35rem 0.875rem', background: 'transparent', border: '1px solid var(--c-border)', borderRadius: 6, color: 'var(--c-text3)', fontSize: '0.75rem', cursor: 'pointer' }}
+                >
+                  Réinitialiser
+                </button>
+              )}
             </div>
-            <div>
-              <div style={{ fontSize: '0.62rem', color: 'var(--c-text3)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '0.25rem' }}>Mise min (€)</div>
-              <input type="number" min={0} placeholder="0" value={filterMinAmount} onChange={e => setFilterMinAmount(e.target.value)}
-                style={{ width: 90, background: 'var(--c-bg)', border: '1px solid var(--c-border)', borderRadius: 6, padding: '0.35rem 0.6rem', fontSize: '0.8rem', color: 'var(--c-text)', outline: 'none' }}
-              />
-            </div>
-            <div>
-              <div style={{ fontSize: '0.62rem', color: 'var(--c-text3)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '0.25rem' }}>Mise max (€)</div>
-              <input type="number" min={0} placeholder="∞" value={filterMaxAmount} onChange={e => setFilterMaxAmount(e.target.value)}
-                style={{ width: 90, background: 'var(--c-bg)', border: '1px solid var(--c-border)', borderRadius: 6, padding: '0.35rem 0.6rem', fontSize: '0.8rem', color: 'var(--c-text)', outline: 'none' }}
-              />
-            </div>
-            {hasFilters && (
-              <button onClick={() => { setFilterDate(''); setFilterRegion(''); setFilterMinAmount(''); setFilterMaxAmount(''); }}
-                style={{ padding: '0.35rem 0.875rem', background: 'transparent', border: '1px solid var(--c-border)', borderRadius: 6, color: 'var(--c-text3)', fontSize: '0.75rem', cursor: 'pointer' }}
-              >
-                Réinitialiser
-              </button>
-            )}
           </div>
         )}
 
@@ -351,14 +405,14 @@ export default function DashboardPage() {
         )}
 
         {/* ── Enchères en cours ── */}
-        {!loading && active.length > 0 && (
+        {!loading && showActive && displayActive.length > 0 && (
           <div style={{ marginBottom: '1.25rem' }}>
             <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--c-text2)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.875rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--c-success)', display: 'inline-block', boxShadow: '0 0 6px var(--c-success)' }} />
-              En cours
+              {filterStatus === 'leading' ? 'En tête' : filterStatus === 'outbid' ? 'Surenchéri' : 'En cours'}
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
-              {active.map(a => {
+              {displayActive.map(a => {
                 const cfg = STATUS_CONFIG[a.status];
                 const isLeading = a.status === 'leading';
                 const isWhaleBlocked = a.whaleOnly && !user?.whalePass;
@@ -400,8 +454,9 @@ export default function DashboardPage() {
                           <div style={{ display: 'flex', gap: '0.4rem' }}>
                             <input
                               type="number"
-                              min={a.currentBid + 1}
-                              placeholder={`> ${a.currentBid} €`}
+                              min={minBid(a.currentBid)}
+                              step="0.01"
+                              placeholder={`min ${minBid(a.currentBid).toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €`}
                               disabled={bidDisabled}
                               value={bidInputs[a.id] || ''}
                               onChange={e => setBidInputs(p => ({ ...p, [a.id]: e.target.value }))}
@@ -426,14 +481,14 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {!loading && active.length === 0 && !error && (
+        {!loading && showActive && displayActive.length === 0 && !error && (
           <div style={{ textAlign: 'center', color: 'var(--c-text3)', padding: '3rem', fontSize: '0.85rem', background: 'var(--c-surf)', border: '1px solid var(--c-border)', borderRadius: 12 }}>
             Aucune enchère en cours.
           </div>
         )}
 
         {/* ── À venir ── */}
-        {!loading && upcoming.length > 0 && (
+        {!loading && showUpcoming && upcoming.length > 0 && (
           <div style={{ marginTop: '1.25rem' }}>
             <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--c-text2)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.875rem' }}>
               À venir
@@ -460,7 +515,7 @@ export default function DashboardPage() {
         )}
 
         {/* ── Terminées ── */}
-        {!loading && closed.length > 0 && (
+        {!loading && showClosed && closed.length > 0 && (
           <div style={{ marginTop: '1.25rem' }}>
             <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--c-text2)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.875rem' }}>
               Terminées
@@ -489,6 +544,36 @@ export default function DashboardPage() {
           </div>
         )}
 
+      </div>
+
+      {/* ── Toast stack surenchères ── */}
+      <div style={{ position: 'fixed', bottom: '1.5rem', right: '1.5rem', zIndex: 1000, display: 'flex', flexDirection: 'column', gap: '0.625rem', pointerEvents: 'none' }}>
+        {notifs.map(n => (
+          <div key={n.id} style={{
+            pointerEvents: 'auto',
+            background: 'var(--c-surf)',
+            border: '1px solid rgba(255,77,77,.4)',
+            borderLeft: '4px solid var(--c-danger)',
+            borderRadius: 8,
+            padding: '0.75rem 1rem',
+            minWidth: 280, maxWidth: 340,
+            boxShadow: '0 8px 24px rgba(0,0,0,.5)',
+            animation: 'toast-in 0.3s ease both',
+            position: 'relative', overflow: 'hidden',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.2rem' }}>
+              <span style={{ fontSize: '1rem' }}>🔴</span>
+              <span style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--c-danger)' }}>Vous avez été surenchéri !</span>
+              <button onClick={() => setNotifs(prev => prev.filter(x => x.id !== n.id))}
+                style={{ marginLeft: 'auto', background: 'none', border: 'none', color: 'var(--c-text3)', cursor: 'pointer', fontSize: '1rem', lineHeight: 1, padding: 0 }}
+              >×</button>
+            </div>
+            <div style={{ fontSize: '0.78rem', color: 'var(--c-text2)' }}>
+              Enchère <strong style={{ color: 'var(--c-text)' }}>#{n.auctionId}</strong> — nouvelle mise : <strong style={{ color: 'var(--c-danger)' }}>€ {n.newAmount.toLocaleString('fr-FR', { minimumFractionDigits: 2 })}</strong>
+            </div>
+            <div style={{ position: 'absolute', bottom: 0, left: 0, height: 3, background: 'var(--c-danger)', opacity: 0.5, borderRadius: '0 0 0 8px', animation: 'toast-progress 6s linear both' }} />
+          </div>
+        ))}
       </div>
     </div>
   );
