@@ -35,6 +35,8 @@ export default function ProfilePage() {
   const [topupLoading, setTopupLoading] = useState(false);
   const [whaleLoading, setWhaleLoading] = useState(false);
   const [error, setError] = useState('');
+  const [whalePrice, setWhalePrice] = useState<number>(199);
+  const [whaleDiscounted, setWhaleDiscounted] = useState(false);
 
   useEffect(() => {
     const user = authModel.getUser();
@@ -42,6 +44,9 @@ export default function ProfilePage() {
     storesApi.byId(user.id)
       .then((s) => { setStore(s); authModel.saveUser(s); })
       .catch(() => { /* keep local data on network error */ });
+    storesApi.whalePassPrice(user.id)
+      .then(({ price, discounted }) => { setWhalePrice(price); setWhaleDiscounted(discounted); })
+      .catch(() => { /* fallback to default */ });
   }, []);
 
   useEffect(() => {
@@ -75,7 +80,7 @@ export default function ProfilePage() {
     }
   };
 
-  const WHALE_PRICE = 199;
+  const WHALE_PRICE = whalePrice;
   const whaleCountdown = useWhaleCountdown(store?.whalePassExpiry);
   const whaleExpirySeconds = store?.whalePassExpiry
     ? Math.max(0, Math.floor((new Date(store.whalePassExpiry).getTime() - Date.now()) / 1000))
@@ -233,7 +238,17 @@ export default function ProfilePage() {
                 <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--c-whale-s)' }}>Pass Whale</div>
                 <div style={{ fontSize: '0.72rem', color: 'var(--c-text3)' }}>199 € / mois · Essai 14 jours gratuits</div>
               </div>
-              <div style={{ marginLeft: 'auto', fontWeight: 800, fontSize: '1.1rem', color: 'var(--c-whale-s)' }}>199 €</div>
+              <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
+                {whaleDiscounted && (
+                  <div style={{ fontSize: '0.7rem', color: 'var(--c-text3)', textDecoration: 'line-through', marginBottom: '0.1rem' }}>199 €</div>
+                )}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <span style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--c-whale-s)' }}>{WHALE_PRICE} €</span>
+                  {whaleDiscounted && (
+                    <span style={{ fontSize: '0.6rem', fontWeight: 700, padding: '0.1rem 0.4rem', borderRadius: 20, background: 'rgba(72,199,142,.15)', border: '1px solid rgba(72,199,142,.3)', color: 'var(--c-success)' }}>-25%</span>
+                  )}
+                </div>
+              </div>
             </div>
             <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 1.25rem', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
               {['Créneaux exclusifs VIP inaccessibles aux comptes Gratuit', 'Jamais placé en file Tortue', 'Dashboard avancé temps réel', 'Support dédié 24/7'].map((f) => (

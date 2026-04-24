@@ -2,6 +2,7 @@ package com.delivery.store.scheduler;
 
 import com.delivery.store.entity.Store;
 import com.delivery.store.repository.StoreRepository;
+import com.delivery.store.service.StoreService;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -16,13 +17,13 @@ import java.util.Map;
 @Component
 public class WhalePassScheduler {
 
-    private static final BigDecimal WHALE_PRICE = new BigDecimal("199");
-
     private final StoreRepository storeRepository;
+    private final StoreService storeService;
     private final SimpMessagingTemplate messagingTemplate;
 
-    public WhalePassScheduler(StoreRepository storeRepository, SimpMessagingTemplate messagingTemplate) {
+    public WhalePassScheduler(StoreRepository storeRepository, StoreService storeService, SimpMessagingTemplate messagingTemplate) {
         this.storeRepository = storeRepository;
+        this.storeService = storeService;
         this.messagingTemplate = messagingTemplate;
     }
 
@@ -33,9 +34,10 @@ public class WhalePassScheduler {
         List<Store> expired = storeRepository.findByWhalePassTrueAndWhalePassExpiryLessThanEqual(now);
 
         for (Store store : expired) {
-            if (store.getBalance() != null && store.getBalance().compareTo(WHALE_PRICE) >= 0) {
-                store.setBalance(store.getBalance().subtract(WHALE_PRICE));
-                store.setTotalSpent(store.getTotalSpent() != null ? store.getTotalSpent().add(WHALE_PRICE) : WHALE_PRICE);
+            BigDecimal price = storeService.whalePassPrice(store);
+            if (store.getBalance() != null && store.getBalance().compareTo(price) >= 0) {
+                store.setBalance(store.getBalance().subtract(price));
+                store.setTotalSpent(store.getTotalSpent() != null ? store.getTotalSpent().add(price) : price);
                 store.setWhalePassExpiry(now.plusMinutes(30));
             } else {
                 store.setWhalePass(false);

@@ -60,6 +60,14 @@ public class StoreController {
         return ResponseEntity.ok(storeService.updateStore(id, dto));
     }
 
+    @GetMapping("/{id}/whale-pass/price")
+    public ResponseEntity<java.util.Map<String, Object>> whalePassPrice(@PathVariable Long id) {
+        com.delivery.store.entity.Store store = storeService.getRawStore(id);
+        java.math.BigDecimal price = storeService.whalePassPrice(store);
+        boolean discounted = price.compareTo(new java.math.BigDecimal("150")) == 0;
+        return ResponseEntity.ok(java.util.Map.of("price", price, "discounted", discounted));
+    }
+
     @PostMapping("/{id}/whale-pass")
     public ResponseEntity<StoreDto> activateWhalePass(@PathVariable Long id) {
         return ResponseEntity.ok(storeService.activateWhalePass(id));
