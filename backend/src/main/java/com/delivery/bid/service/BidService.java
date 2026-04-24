@@ -55,6 +55,10 @@ public class BidService {
             throw new IllegalStateException("L'enchère n'est pas ouverte");
         }
 
+        if (Boolean.TRUE.equals(auction.getWhaleOnly()) && !Boolean.TRUE.equals(store.getWhalePass())) {
+            throw new IllegalStateException("Cette enchère est réservée aux détenteurs du Pass Whale");
+        }
+
         LocalDateTime now = LocalDateTime.now();
         if (now.isBefore(auction.getStartTime()) || now.isAfter(auction.getEndTime())) {
             throw new IllegalStateException("L'enchère n'est pas active");

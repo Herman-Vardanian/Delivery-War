@@ -30,4 +30,6 @@ public class Auction {
     @ManyToOne
     @JoinColumn(name = "delivery_slot_id")
     private DeliverySlot deliverySlot;
+
+    private Boolean whaleOnly = false;
 }
