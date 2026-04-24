@@ -9,8 +9,10 @@ import com.delivery.bid.mapper.BidMapper;
 import com.delivery.bid.repository.BidRepository;
 import com.delivery.store.entity.Store;
 import com.delivery.store.repository.StoreRepository;
+import com.delivery.auction.dto.AuctionDto;
 import com.delivery.auction.entity.Auction;
 import com.delivery.auction.entity.AuctionStatus;
+import com.delivery.auction.mapper.AuctionMapper;
 import com.delivery.auction.repository.AuctionRepository;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
@@ -31,15 +33,17 @@ public class BidService {
     private final StoreRepository storeRepository;
     private final AuctionRepository auctionRepository;
     private final BidMapper mapper;
+    private final AuctionMapper auctionMapper;
     private final SimpMessagingTemplate messagingTemplate;
 
     public BidService(BidRepository repository, StoreRepository storeRepository,
             AuctionRepository auctionRepository, BidMapper mapper,
-            SimpMessagingTemplate messagingTemplate) {
+            AuctionMapper auctionMapper, SimpMessagingTemplate messagingTemplate) {
         this.repository = repository;
         this.storeRepository = storeRepository;
         this.auctionRepository = auctionRepository;
         this.mapper = mapper;
+        this.auctionMapper = auctionMapper;
         this.messagingTemplate = messagingTemplate;
     }
 
@@ -115,6 +119,17 @@ public class BidService {
 
         Bid saved = repository.save(bid);
         BidDto savedDto = mapper.toDto(saved);
+
+        // Extend auction by 30s if bid lands in the last 10 seconds
+        if (now.isAfter(auction.getEndTime().minusSeconds(10))) {
+            auction.setEndTime(auction.getEndTime().plusSeconds(30));
+            auctionRepository.save(auction);
+            List<AuctionDto> allAuctions = auctionRepository.findAll()
+                    .stream()
+                    .map(auctionMapper::toDto)
+                    .toList();
+            messagingTemplate.convertAndSend("/topic/auctions", allAuctions);
+        }
 
         // Broadcast new bid to all dashboard watchers
         messagingTemplate.convertAndSend("/topic/bids", savedDto);
