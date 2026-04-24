@@ -162,10 +162,13 @@ export default function DashboardPage() {
     }
   };
 
+  const minBid = (currentBid: number) => Math.ceil(currentBid * 1.05 * 100) / 100;
+
   const placeBid = async (auctionId: number, currentBid: number) => {
     const amount = parseFloat(bidInputs[auctionId] ?? '');
-    if (!amount || amount <= currentBid) {
-      setBidErrors(p => ({ ...p, [auctionId]: `Montant doit être > ${currentBid} €` }));
+    const min = minBid(currentBid);
+    if (!amount || amount < min) {
+      setBidErrors(p => ({ ...p, [auctionId]: `Minimum +5% — enchère min : ${min.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €` }));
       return;
     }
     if (!user?.id) return;
@@ -440,8 +443,9 @@ export default function DashboardPage() {
                           <div style={{ display: 'flex', gap: '0.4rem' }}>
                             <input
                               type="number"
-                              min={a.currentBid + 1}
-                              placeholder={`> ${a.currentBid} €`}
+                              min={minBid(a.currentBid)}
+                              step="0.01"
+                              placeholder={`min ${minBid(a.currentBid).toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €`}
                               disabled={bidDisabled}
                               value={bidInputs[a.id] || ''}
                               onChange={e => setBidInputs(p => ({ ...p, [a.id]: e.target.value }))}

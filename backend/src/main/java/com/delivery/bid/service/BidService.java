@@ -82,9 +82,12 @@ public class BidService {
         } else {
             Bid highest = highestOpt.get();
             BigDecimal highestAmount = BigDecimal.valueOf(highest.getAmount());
+            BigDecimal minBid = highestAmount.multiply(BigDecimal.valueOf(1.05));
 
-            if (bidAmount.compareTo(highestAmount) <= 0) {
-                throw new IllegalStateException("L'enchère doit être supérieure à l'offre actuelle: " + highestAmount);
+            if (bidAmount.compareTo(minBid) < 0) {
+                throw new IllegalStateException(
+                    "L'enchère doit être au moins 5% supérieure à l'offre actuelle (" + highestAmount + " €) — minimum: " + minBid.setScale(2, java.math.RoundingMode.CEILING) + " €"
+                );
             }
 
             if (highest.getStore().getId().equals(store.getId())) {
