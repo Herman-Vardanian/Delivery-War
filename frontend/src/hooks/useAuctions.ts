@@ -12,6 +12,8 @@ export interface DisplayAuction {
   id: number;
   slot: string;
   slotDate: string;
+  slotDateIso: string;
+  region: string;
   auctionEnd: string;
   auctionStart: string;
   currentBid: number;
@@ -55,6 +57,8 @@ function buildDisplay(
     ? new Date(a.slotStartTime + 'Z').toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
     : '';
 
+  const slotDateIso = a.slotStartTime ? a.slotStartTime.split('T')[0] : '';
+
   let status: DisplayStatus;
   if (finished && !notStarted) {
     status = isLeading ? 'won' : 'lost';
@@ -72,6 +76,8 @@ function buildDisplay(
     id: a.id,
     slot,
     slotDate,
+    slotDateIso,
+    region: a.region ?? '',
     auctionEnd:   a.endTime   ?? '',
     auctionStart: a.startTime ?? '',
     currentBid,

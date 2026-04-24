@@ -26,6 +26,7 @@ public class AuctionMapper {
                 .slotStartTime(slot != null && slot.getStartTime() != null ? slot.getStartTime().toString() : null)
                 .slotEndTime(slot != null && slot.getEndTime() != null ? slot.getEndTime().toString() : null)
                 .whaleOnly(a.getWhaleOnly() != null ? a.getWhaleOnly() : false)
+                .region(a.getRegion())
                 .build();
     }
 
@@ -42,6 +43,7 @@ public class AuctionMapper {
                 .status(d.getStatus())
                 .deliverySlot(slot)
                 .whaleOnly(d.getWhaleOnly() != null ? d.getWhaleOnly() : false)
+                .region(d.getRegion())
                 .build();
     }
 }

@@ -7,6 +7,11 @@ export function RequireAuth({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
 
+export function GuestRoute({ children }: { children: ReactNode }) {
+  if (authModel.isAuthenticated()) return <Navigate to="/dashboard" replace />;
+  return <>{children}</>;
+}
+
 export function RequireAdmin({ children }: { children: ReactNode }) {
   if (!authModel.isAuthenticated()) return <Navigate to="/login" replace />;
   if (authModel.getUser()?.role !== 'ADMIN') return <Navigate to="/dashboard" replace />;

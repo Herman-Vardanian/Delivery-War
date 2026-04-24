@@ -1,9 +1,17 @@
 import { useState } from 'react';
 
+const FRENCH_REGIONS = [
+  'Auvergne-Rhône-Alpes', 'Bourgogne-Franche-Comté', 'Bretagne', 'Centre-Val de Loire',
+  'Corse', 'Grand Est', 'Guadeloupe', 'Guyane', 'Hauts-de-France', 'Île-de-France',
+  'La Réunion', 'Martinique', 'Mayotte', 'Normandie', 'Nouvelle-Aquitaine',
+  'Occitanie', 'Pays de la Loire', "Provence-Alpes-Côte d'Azur",
+];
+
 interface AdminAuction {
   id: number;
   zone: string;
   slot: string;
+  region: string;
   currentBid: number;
   participants: number;
   secondsLeft: number;
@@ -22,12 +30,12 @@ interface MockStore {
 }
 
 const MOCK_AUCTIONS: AdminAuction[] = [
-  { id: 1, zone: 'Paris 18e', slot: '09h–11h', currentBid: 137, participants: 4, secondsLeft: 142, status: 'active',  winner: 'PARIS-NORD-07',         whaleOnly: false },
-  { id: 2, zone: 'Paris 11e', slot: '14h–16h', currentBid: 182, participants: 6, secondsLeft: 38,  status: 'active',  winner: 'BOULANGERIE-DUPONT',     whaleOnly: true  },
-  { id: 3, zone: 'Paris 5e',  slot: '10h–12h', currentBid: 95,  participants: 3, secondsLeft: 310, status: 'active',  winner: 'FROMAGERIE-LEFEBVRE',    whaleOnly: false },
-  { id: 4, zone: 'Paris 13e', slot: '16h–18h', currentBid: 210, participants: 8, secondsLeft: 72,  status: 'active',  winner: 'TRAITEUR-AZIZ',          whaleOnly: false },
-  { id: 5, zone: 'Paris 9e',  slot: '08h–10h', currentBid: 88,  participants: 2, secondsLeft: 0,   status: 'closed',  winner: 'PARIS-NORD-07',          whaleOnly: false },
-  { id: 6, zone: 'Paris 3e',  slot: '13h–15h', currentBid: 165, participants: 5, secondsLeft: 0,   status: 'closed',  winner: 'ÉPICERIE-MARTIN',        whaleOnly: true  },
+  { id: 1, zone: 'Paris 18e', slot: '09h–11h', region: 'Île-de-France',           currentBid: 137, participants: 4, secondsLeft: 142, status: 'active',  winner: 'PARIS-NORD-07',      whaleOnly: false },
+  { id: 2, zone: 'Paris 11e', slot: '14h–16h', region: 'Île-de-France',           currentBid: 182, participants: 6, secondsLeft: 38,  status: 'active',  winner: 'BOULANGERIE-DUPONT', whaleOnly: true  },
+  { id: 3, zone: 'Paris 5e',  slot: '10h–12h', region: 'Île-de-France',           currentBid: 95,  participants: 3, secondsLeft: 310, status: 'active',  winner: 'FROMAGERIE-LEFEBVRE',whaleOnly: false },
+  { id: 4, zone: 'Lyon 2e',   slot: '16h–18h', region: 'Auvergne-Rhône-Alpes',   currentBid: 210, participants: 8, secondsLeft: 72,  status: 'active',  winner: 'TRAITEUR-AZIZ',      whaleOnly: false },
+  { id: 5, zone: 'Bordeaux',  slot: '08h–10h', region: 'Nouvelle-Aquitaine',      currentBid: 88,  participants: 2, secondsLeft: 0,   status: 'closed',  winner: 'PARIS-NORD-07',      whaleOnly: false },
+  { id: 6, zone: 'Marseille', slot: '13h–15h', region: "Provence-Alpes-Côte d'Azur", currentBid: 165, participants: 5, secondsLeft: 0, status: 'closed', winner: 'ÉPICERIE-MARTIN',   whaleOnly: true  },
 ];
 
 const MOCK_STORES: MockStore[] = [
@@ -58,7 +66,7 @@ export default function AdminDashboardPage() {
   const [tab, setTab] = useState<'auctions' | 'stores'>('auctions');
   const [auctions, setAuctions] = useState<AdminAuction[]>(MOCK_AUCTIONS);
   const [showNewForm, setShowNewForm] = useState(false);
-  const [newAuction, setNewAuction] = useState({ zone: ZONES[0]!, slot: SLOTS[0]!, startBid: '', whaleOnly: false });
+  const [newAuction, setNewAuction] = useState({ zone: ZONES[0]!, slot: SLOTS[0]!, startBid: '', whaleOnly: false, region: '' });
 
   const activeCount   = auctions.filter((a) => a.status === 'active').length;
   const whaleCount    = MOCK_STORES.filter((s) => s.whalePass).length;
@@ -70,6 +78,7 @@ export default function AdminDashboardPage() {
       id: Date.now(),
       zone: newAuction.zone,
       slot: newAuction.slot,
+      region: newAuction.region,
       currentBid: parseFloat(newAuction.startBid),
       participants: 0,
       secondsLeft: 600,
@@ -77,7 +86,7 @@ export default function AdminDashboardPage() {
       winner: '—',
       whaleOnly: newAuction.whaleOnly,
     }]);
-    setNewAuction({ zone: ZONES[0]!, slot: SLOTS[0]!, startBid: '', whaleOnly: false });
+    setNewAuction({ zone: ZONES[0]!, slot: SLOTS[0]!, startBid: '', whaleOnly: false, region: '' });
     setShowNewForm(false);
   };
 
@@ -139,7 +148,7 @@ export default function AdminDashboardPage() {
             {/* Formulaire nouvelle enchère */}
             {showNewForm && (
               <div style={{ background: 'var(--c-surf)', border: '1px solid rgba(255,107,26,.3)', borderRadius: 10, padding: '1.25rem', marginBottom: '1rem' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr auto', gap: '0.75rem', alignItems: 'flex-end' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr auto', gap: '0.75rem', alignItems: 'flex-end' }}>
                   <div>
                     <div style={{ fontSize: '0.65rem', color: 'var(--c-text3)', marginBottom: '0.3rem', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Zone</div>
                     <select
@@ -171,6 +180,17 @@ export default function AdminDashboardPage() {
                       style={{ width: '100%', background: 'var(--c-bg)', border: '1px solid var(--c-border)', borderRadius: 6, padding: '0.5rem 0.75rem', fontSize: '0.82rem', color: 'var(--c-text)', outline: 'none', boxSizing: 'border-box' }}
                     />
                   </div>
+                  <div>
+                    <div style={{ fontSize: '0.65rem', color: 'var(--c-text3)', marginBottom: '0.3rem', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Région</div>
+                    <select
+                      value={newAuction.region}
+                      onChange={(e) => setNewAuction((p) => ({ ...p, region: e.target.value }))}
+                      style={{ width: '100%', background: 'var(--c-bg)', border: '1px solid var(--c-border)', borderRadius: 6, padding: '0.5rem 0.75rem', fontSize: '0.82rem', color: newAuction.region ? 'var(--c-text)' : 'var(--c-text3)', outline: 'none' }}
+                    >
+                      <option value="">— Aucune —</option>
+                      {FRENCH_REGIONS.map((r) => <option key={r} value={r}>{r}</option>)}
+                    </select>
+                  </div>
                   <button
                     onClick={createAuction}
                     style={{ padding: '0.5rem 1.25rem', background: 'var(--c-success)', border: 'none', borderRadius: 6, color: '#fff', fontWeight: 700, fontSize: '0.78rem', cursor: 'pointer', whiteSpace: 'nowrap' }}
@@ -196,7 +216,7 @@ export default function AdminDashboardPage() {
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid var(--c-border)' }}>
-                    {['Zone', 'Créneau', 'Mise actuelle', 'Enchérisseurs', 'Temps', 'En tête', 'Accès', 'Statut', ''].map((h) => (
+                    {['Zone', 'Région', 'Créneau', 'Mise actuelle', 'Enchérisseurs', 'Temps', 'En tête', 'Accès', 'Statut', ''].map((h) => (
                       <th key={h} style={{ padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--c-text3)', fontWeight: 700 }}>{h}</th>
                     ))}
                   </tr>
@@ -205,6 +225,7 @@ export default function AdminDashboardPage() {
                   {auctions.map((a, i) => (
                     <tr key={a.id} style={{ borderBottom: i < auctions.length - 1 ? '1px solid var(--c-border)' : 'none', opacity: a.status === 'closed' ? 0.55 : 1 }}>
                       <td style={{ padding: '0.875rem 1rem', fontWeight: 700, fontSize: '0.85rem', color: 'var(--c-text)' }}>{a.zone}</td>
+                      <td style={{ padding: '0.875rem 1rem', fontSize: '0.75rem', color: 'var(--c-text3)' }}>{a.region || '—'}</td>
                       <td style={{ padding: '0.875rem 1rem', fontSize: '0.8rem', color: 'var(--c-text2)' }}>{a.slot}</td>
                       <td style={{ padding: '0.875rem 1rem', fontWeight: 800, fontSize: '0.9rem', color: 'var(--c-pri)' }}>€ {a.currentBid}</td>
                       <td style={{ padding: '0.875rem 1rem', fontSize: '0.8rem', color: 'var(--c-text2)', textAlign: 'center' }}>{a.participants}</td>

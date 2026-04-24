@@ -32,4 +32,6 @@ public class Auction {
     private DeliverySlot deliverySlot;
 
     private Boolean whaleOnly = false;
+
+    private String region;
 }

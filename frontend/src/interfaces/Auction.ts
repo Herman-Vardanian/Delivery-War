@@ -14,6 +14,7 @@ export interface Auction {
     slotStartTime?: string | null;
     slotEndTime?: string | null;
     whaleOnly?: boolean;
+    region?: string | null;
 }
 
 
@@ -23,5 +24,6 @@ export type CreateAuction = {
     "endTime":string, // ISO FORMAT
     "status": AuctionStatus,
     "deliverySlotId": number,
-    "whaleOnly"?: boolean
+    "whaleOnly"?: boolean,
+    "region"?: string
 }

@@ -66,6 +66,13 @@ function nowLocalInput(): string {
   return local.toISOString().slice(0, 16);
 }
 
+const FRENCH_REGIONS = [
+  'Auvergne-Rhône-Alpes', 'Bourgogne-Franche-Comté', 'Bretagne', 'Centre-Val de Loire',
+  'Corse', 'Grand Est', 'Guadeloupe', 'Guyane', 'Hauts-de-France', 'Île-de-France',
+  'La Réunion', 'Martinique', 'Mayotte', 'Normandie', 'Nouvelle-Aquitaine',
+  'Occitanie', 'Pays de la Loire', 'Provence-Alpes-Côte d\'Azur',
+];
+
 interface NewAuctionForm {
   deliveryDate: string;
   deliveryStartTime: string;
@@ -74,6 +81,7 @@ interface NewAuctionForm {
   durationMin: string;
   startBid: string;
   whaleOnly: boolean;
+  region: string;
 }
 
 export default function DashboardPage() {
@@ -94,10 +102,15 @@ export default function DashboardPage() {
 
   const [newAuction, setNewAuction] = useState<NewAuctionForm>({
     deliveryDate: '', deliveryStartTime: '', deliveryEndTime: '',
-    auctionStart: nowLocalInput(), durationMin: '5', startBid: '', whaleOnly: false,
+    auctionStart: nowLocalInput(), durationMin: '5', startBid: '', whaleOnly: false, region: '',
   });
   const [createError, setCreateError] = useState('');
   const [creating, setCreating] = useState(false);
+
+  const [filterDate,      setFilterDate]      = useState('');
+  const [filterRegion,    setFilterRegion]    = useState('');
+  const [filterMinAmount, setFilterMinAmount] = useState('');
+  const [filterMaxAmount, setFilterMaxAmount] = useState('');
 
   const createAuction = async () => {
     if (!newAuction.deliveryDate)      { setCreateError('La date de livraison est requise.'); return; }
@@ -137,8 +150,9 @@ export default function DashboardPage() {
         status:        AuctionStatus.OPEN,
         deliverySlotId: slot.id,
         whaleOnly:     newAuction.whaleOnly,
+        region:        newAuction.region || undefined,
       });
-      setNewAuction({ deliveryDate: '', deliveryStartTime: '', deliveryEndTime: '', auctionStart: nowLocalInput(), durationMin: '5', startBid: '', whaleOnly: false });
+      setNewAuction({ deliveryDate: '', deliveryStartTime: '', deliveryEndTime: '', auctionStart: nowLocalInput(), durationMin: '5', startBid: '', whaleOnly: false, region: '' });
       // WS /topic/auctions push handles the list refresh automatically
     } catch (e: unknown) {
       setCreateError(e instanceof Error ? e.message : 'Erreur création');
@@ -164,11 +178,20 @@ export default function DashboardPage() {
     }
   };
 
-  const active   = auctions.filter(a => a.status === 'leading' || a.status === 'outbid' || a.status === 'open');
-  const upcoming = auctions.filter(a => a.status === 'pending');
-  const closed   = auctions.filter(a => a.status === 'won' || a.status === 'lost');
+  const applyFilters = (list: typeof auctions) => list.filter(a => {
+    if (filterDate      && a.slotDateIso !== filterDate) return false;
+    if (filterRegion    && a.region !== filterRegion)    return false;
+    if (filterMinAmount && a.currentBid < parseFloat(filterMinAmount)) return false;
+    if (filterMaxAmount && a.currentBid > parseFloat(filterMaxAmount)) return false;
+    return true;
+  });
+
+  const active   = applyFilters(auctions.filter(a => a.status === 'leading' || a.status === 'outbid' || a.status === 'open'));
+  const upcoming = applyFilters(auctions.filter(a => a.status === 'pending'));
+  const closed   = applyFilters(auctions.filter(a => a.status === 'won' || a.status === 'lost'));
   const leading  = auctions.filter(a => a.status === 'leading').length;
   const outbid   = auctions.filter(a => a.status === 'outbid').length;
+  const hasFilters = !!(filterDate || filterRegion || filterMinAmount || filterMaxAmount);
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--c-bg)', padding: '2rem 1.5rem' }}>
@@ -189,7 +212,7 @@ export default function DashboardPage() {
               Admin — Créer une enchère
             </div>
             <div style={{ fontSize: '0.65rem', color: 'var(--c-text3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.4rem' }}>Créneau de livraison</div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem', marginBottom: '0.75rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '0.75rem', marginBottom: '0.75rem' }}>
               <div>
                 <label style={{ fontSize: '0.68rem', color: 'var(--c-text3)', display: 'block', marginBottom: '0.3rem' }}>Date</label>
                 <input type="date" value={newAuction.deliveryDate}
@@ -210,6 +233,15 @@ export default function DashboardPage() {
                   onChange={e => setNewAuction(p => ({ ...p, deliveryEndTime: e.target.value }))}
                   style={{ width: '100%', boxSizing: 'border-box', background: 'var(--c-bg)', border: '1px solid var(--c-border)', borderRadius: 6, padding: '0.45rem 0.65rem', fontSize: '0.82rem', color: 'var(--c-text)', outline: 'none', colorScheme: 'dark' }}
                 />
+              </div>
+              <div>
+                <label style={{ fontSize: '0.68rem', color: 'var(--c-text3)', display: 'block', marginBottom: '0.3rem' }}>Région</label>
+                <select value={newAuction.region} onChange={e => setNewAuction(p => ({ ...p, region: e.target.value }))}
+                  style={{ width: '100%', boxSizing: 'border-box', background: 'var(--c-bg)', border: '1px solid var(--c-border)', borderRadius: 6, padding: '0.45rem 0.65rem', fontSize: '0.82rem', color: newAuction.region ? 'var(--c-text)' : 'var(--c-text3)', outline: 'none' }}
+                >
+                  <option value="">— Aucune —</option>
+                  {FRENCH_REGIONS.map(r => <option key={r} value={r}>{r}</option>)}
+                </select>
               </div>
             </div>
             <div style={{ fontSize: '0.65rem', color: 'var(--c-text3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.4rem' }}>Enchère</div>
@@ -270,6 +302,46 @@ export default function DashboardPage() {
           ))}
         </div>
 
+        {/* ── Filtres ── */}
+        {!loading && (
+          <div style={{ background: 'var(--c-surf)', border: '1px solid var(--c-border)', borderRadius: 10, padding: '0.875rem 1.25rem', marginBottom: '1.25rem', display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'flex-end' }}>
+            <div>
+              <div style={{ fontSize: '0.62rem', color: 'var(--c-text3)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '0.25rem' }}>Date de livraison</div>
+              <input type="date" value={filterDate} onChange={e => setFilterDate(e.target.value)}
+                style={{ background: 'var(--c-bg)', border: '1px solid var(--c-border)', borderRadius: 6, padding: '0.35rem 0.6rem', fontSize: '0.8rem', color: filterDate ? 'var(--c-text)' : 'var(--c-text3)', outline: 'none', colorScheme: 'dark' }}
+              />
+            </div>
+            <div>
+              <div style={{ fontSize: '0.62rem', color: 'var(--c-text3)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '0.25rem' }}>Région</div>
+              <select value={filterRegion} onChange={e => setFilterRegion(e.target.value)}
+                style={{ background: 'var(--c-bg)', border: '1px solid var(--c-border)', borderRadius: 6, padding: '0.35rem 0.6rem', fontSize: '0.8rem', color: filterRegion ? 'var(--c-text)' : 'var(--c-text3)', outline: 'none' }}
+              >
+                <option value="">Toutes les régions</option>
+                {FRENCH_REGIONS.map(r => <option key={r} value={r}>{r}</option>)}
+              </select>
+            </div>
+            <div>
+              <div style={{ fontSize: '0.62rem', color: 'var(--c-text3)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '0.25rem' }}>Mise min (€)</div>
+              <input type="number" min={0} placeholder="0" value={filterMinAmount} onChange={e => setFilterMinAmount(e.target.value)}
+                style={{ width: 90, background: 'var(--c-bg)', border: '1px solid var(--c-border)', borderRadius: 6, padding: '0.35rem 0.6rem', fontSize: '0.8rem', color: 'var(--c-text)', outline: 'none' }}
+              />
+            </div>
+            <div>
+              <div style={{ fontSize: '0.62rem', color: 'var(--c-text3)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '0.25rem' }}>Mise max (€)</div>
+              <input type="number" min={0} placeholder="∞" value={filterMaxAmount} onChange={e => setFilterMaxAmount(e.target.value)}
+                style={{ width: 90, background: 'var(--c-bg)', border: '1px solid var(--c-border)', borderRadius: 6, padding: '0.35rem 0.6rem', fontSize: '0.8rem', color: 'var(--c-text)', outline: 'none' }}
+              />
+            </div>
+            {hasFilters && (
+              <button onClick={() => { setFilterDate(''); setFilterRegion(''); setFilterMinAmount(''); setFilterMaxAmount(''); }}
+                style={{ padding: '0.35rem 0.875rem', background: 'transparent', border: '1px solid var(--c-border)', borderRadius: 6, color: 'var(--c-text3)', fontSize: '0.75rem', cursor: 'pointer' }}
+              >
+                Réinitialiser
+              </button>
+            )}
+          </div>
+        )}
+
         {/* ── Loading / Error ── */}
         {loading && (
           <div style={{ textAlign: 'center', color: 'var(--c-text3)', padding: '3rem', fontSize: '0.85rem' }}>Chargement…</div>
@@ -304,6 +376,7 @@ export default function DashboardPage() {
                       </div>
                       <div style={{ fontSize: '0.75rem', color: 'var(--c-text3)' }}>
                         Livraison {a.slotDate && <><span style={{ color: 'var(--c-text2)', fontWeight: 600 }}>{a.slotDate}</span> · </>}{a.slot}
+                        {a.region && <span style={{ marginLeft: '0.5rem', fontSize: '0.65rem', color: 'var(--c-text3)', background: 'rgba(255,255,255,.05)', border: '1px solid var(--c-border)', borderRadius: 10, padding: '0.1rem 0.45rem' }}>{a.region}</span>}
                       </div>
                     </div>
                     <div style={{ textAlign: 'center' }}>
@@ -372,6 +445,7 @@ export default function DashboardPage() {
                     <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--c-text)', marginBottom: '0.15rem' }}>Enchère #{a.id}</div>
                     <div style={{ fontSize: '0.72rem', color: 'var(--c-text3)' }}>
                       Livraison {a.slotDate && <><span style={{ color: 'var(--c-text2)', fontWeight: 600 }}>{a.slotDate}</span> · </>}{a.slot}
+                      {a.region && <span style={{ marginLeft: '0.5rem', fontSize: '0.65rem', color: 'var(--c-text3)', background: 'rgba(255,255,255,.05)', border: '1px solid var(--c-border)', borderRadius: 10, padding: '0.1rem 0.45rem' }}>{a.region}</span>}
                     </div>
                   </div>
                   <div><CountDown startTime={a.auctionStart} /></div>
@@ -400,6 +474,7 @@ export default function DashboardPage() {
                       <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--c-text)', marginBottom: '0.15rem' }}>Enchère #{a.id}</div>
                       <div style={{ fontSize: '0.72rem', color: 'var(--c-text3)' }}>
                         Livraison {a.slotDate && <><span style={{ color: 'var(--c-text2)', fontWeight: 600 }}>{a.slotDate}</span> · </>}{a.slot}
+                        {a.region && <span style={{ marginLeft: '0.5rem', fontSize: '0.65rem', color: 'var(--c-text3)', background: 'rgba(255,255,255,.05)', border: '1px solid var(--c-border)', borderRadius: 10, padding: '0.1rem 0.45rem' }}>{a.region}</span>}
                       </div>
                     </div>
                     <div style={{ fontSize: '0.72rem', color: 'var(--c-text3)' }}>Terminé</div>
