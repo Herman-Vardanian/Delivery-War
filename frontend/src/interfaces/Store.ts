@@ -14,7 +14,8 @@ export interface Store {
     "reservedBalance": number,
     "totalSpent": number,
     "whalePass": boolean,
-    "passId": string | null
+    "passId": string | null,
+    "whalePassExpiry": string | null
 }
 
 export type CreateStore = {

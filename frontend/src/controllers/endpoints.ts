@@ -79,4 +79,8 @@ export const stores = {
 
     // Bids du store
     bids: (storeId: number) => api.get<Bid[]>(`/stores/${storeId}/bid`),
+
+    activateWhalePass: (id: number) => api.post<Store>(`/stores/${id}/whale-pass`, {}),
+    deactivateWhalePass: (id: number) => api.delete<Store>(`/stores/${id}/whale-pass`),
+    whalePassPrice: (id: number) => api.get<{ price: number; discounted: boolean }>(`/stores/${id}/whale-pass/price`),
 };

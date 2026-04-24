@@ -1,5 +1,6 @@
 package com.delivery.store.service;
 
+import com.delivery.common.exception.InsufficientBalanceException;
 import com.delivery.common.exception.ResourceNotFoundException;
 import com.delivery.store.dto.StoreDto;
 import com.delivery.store.entity.Store;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -47,6 +49,11 @@ public class StoreService {
     public StoreDto getStore(Long id) {
         return repository.findById(id)
                 .map(mapper::toDto)
+                .orElseThrow(() -> new ResourceNotFoundException("Store not found: " + id));
+    }
+
+    public Store getRawStore(Long id) {
+        return repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Store not found: " + id));
     }
 
@@ -99,6 +106,48 @@ public class StoreService {
         if (!password.equals(store.getPassword()))
             throw new IllegalArgumentException("Identifiants incorrects.");
         return mapper.toDto(store);
+    }
+
+    public StoreDto activateWhalePass(Long id) {
+        Store store = repository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Store not found: " + id));
+
+        if (Boolean.TRUE.equals(store.getWhalePass())) {
+            throw new IllegalStateException("Le Pass Whale est déjà actif.");
+        }
+
+        BigDecimal price = whalePassPrice(store);
+        if (store.getBalance() == null || store.getBalance().compareTo(price) < 0) {
+            throw new InsufficientBalanceException(
+                "Solde insuffisant pour activer le Pass Whale (" + price + " €). Solde actuel : " + store.getBalance() + " €"
+            );
+        }
+
+        store.setBalance(store.getBalance().subtract(price));
+        store.setTotalSpent(store.getTotalSpent() != null ? store.getTotalSpent().add(price) : price);
+        store.setWhalePass(true);
+        store.setWhalePassExpiry(LocalDateTime.now().plusMinutes(30));
+
+        return mapper.toDto(repository.save(store));
+    }
+
+    public StoreDto deactivateWhalePass(Long id) {
+        Store store = repository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Store not found: " + id));
+
+        if (!Boolean.TRUE.equals(store.getWhalePass())) {
+            throw new IllegalStateException("Le Pass Whale n'est pas actif.");
+        }
+
+        store.setWhalePass(false);
+        store.setWhalePassExpiry(null);
+        return mapper.toDto(repository.save(store));
+    }
+
+    public BigDecimal whalePassPrice(Store store) {
+        List<Store> top5 = repository.findTop5ByOrderByTotalSpentDesc();
+        boolean inTop5 = top5.stream().anyMatch(s -> s.getId().equals(store.getId()));
+        return inTop5 ? new BigDecimal("150") : new BigDecimal("199");
     }
 
     public void deleteStore(Long id) {
