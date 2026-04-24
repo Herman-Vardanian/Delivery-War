@@ -46,25 +46,25 @@ public class BidService {
     public BidDto createBid(BidDto dto) {
 
         Store store = storeRepository.findById(dto.getStoreId())
-                .orElseThrow(() -> new ResourceNotFoundException("Store not found: " + dto.getStoreId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Magasin non trouvé: " + dto.getStoreId()));
 
         Auction auction = auctionRepository.findById(dto.getAuctionId())
-                .orElseThrow(() -> new ResourceNotFoundException("Auction not found: " + dto.getAuctionId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Enchère non trouvée: " + dto.getAuctionId()));
 
         if (auction.getStatus() != AuctionStatus.OPEN) {
-            throw new IllegalStateException("Auction is not open");
+            throw new IllegalStateException("L'enchère n'est pas ouverte");
         }
 
         LocalDateTime now = LocalDateTime.now();
         if (now.isBefore(auction.getStartTime()) || now.isAfter(auction.getEndTime())) {
-            throw new IllegalStateException("Auction not active");
+            throw new IllegalStateException("L'enchère n'est pas active");
         }
 
         BigDecimal bidAmount = BigDecimal.valueOf(dto.getAmount());
 
         if (store.getBalance().compareTo(bidAmount) < 0) {
             throw new InsufficientBalanceException(
-                "Insufficient balance: available=" + store.getBalance() + ", required=" + bidAmount
+                "Solde insuffisant: disponible=" + store.getBalance() + ", requis=" + bidAmount
             );
         }
 
@@ -73,18 +73,18 @@ public class BidService {
 
         if (highestOpt.isEmpty()) {
             if (bidAmount.compareTo(startPrice) < 0) {
-                throw new IllegalStateException("Bid must be at least starting price: " + startPrice);
+                throw new IllegalStateException("L'enchère doit être au moins à prix de départ: " + startPrice);
             }
         } else {
             Bid highest = highestOpt.get();
             BigDecimal highestAmount = BigDecimal.valueOf(highest.getAmount());
 
             if (bidAmount.compareTo(highestAmount) <= 0) {
-                throw new IllegalStateException("Bid must be higher than current highest bid: " + highestAmount);
+                throw new IllegalStateException("L'enchère doit être supérieure à l'offre actuelle: " + highestAmount);
             }
 
             if (highest.getStore().getId().equals(store.getId())) {
-                throw new IllegalStateException("You already have the highest bid");
+                throw new IllegalStateException("Vous avez déjà l'offre la plus élevée");
             }
 
             Store oldStore = highest.getStore();
