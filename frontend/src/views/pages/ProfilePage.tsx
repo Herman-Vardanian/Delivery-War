@@ -1,7 +1,26 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { authModel } from '../../models/authModel';
 import { stores as storesApi } from '../../controllers/endpoints';
 import type { Store } from '../../interfaces/Store';
+
+function useWhaleCountdown(expiry: string | null | undefined): string {
+  const calc = useCallback(() => {
+    if (!expiry) return 0;
+    return Math.max(0, Math.floor((new Date(expiry).getTime() - Date.now()) / 1000));
+  }, [expiry]);
+
+  const [s, setS] = useState(calc);
+  useEffect(() => {
+    setS(calc());
+    const id = setInterval(() => setS(calc()), 1000);
+    return () => clearInterval(id);
+  }, [calc]);
+
+  if (!expiry || s <= 0) return 'Expiration imminente';
+  const m = Math.floor(s / 60);
+  const sec = s % 60;
+  return `${m > 0 ? `${m}m ` : ''}${String(sec).padStart(2, '0')}s`;
+}
 
 const AMOUNTS = [10, 20, 50, 100, 200];
 
@@ -11,6 +30,8 @@ export default function ProfilePage() {
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [showTopupSuccess, setShowTopupSuccess] = useState(false);
   const [showWhaleSuccess, setShowWhaleSuccess] = useState(false);
+  const [showWhaleCancelled, setShowWhaleCancelled] = useState(false);
+  const [whaleUnsubLoading, setWhaleUnsubLoading] = useState(false);
   const [topupLoading, setTopupLoading] = useState(false);
   const [whaleLoading, setWhaleLoading] = useState(false);
   const [error, setError] = useState('');
@@ -54,12 +75,36 @@ export default function ProfilePage() {
     }
   };
 
+  const WHALE_PRICE = 199;
+  const whaleCountdown = useWhaleCountdown(store?.whalePassExpiry);
+  const whaleExpirySeconds = store?.whalePassExpiry
+    ? Math.max(0, Math.floor((new Date(store.whalePassExpiry).getTime() - Date.now()) / 1000))
+    : 0;
+
+  const handleWhaleUnsub = async () => {
+    if (!store) return;
+    setWhaleUnsubLoading(true);
+    setError('');
+    try {
+      const updated = await storesApi.deactivateWhalePass(store.id);
+      setStore(updated);
+      authModel.saveUser(updated);
+      window.dispatchEvent(new Event('user-updated'));
+      setShowWhaleCancelled(true);
+      setTimeout(() => setShowWhaleCancelled(false), 3000);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Erreur désabonnement Pass Whale');
+    } finally {
+      setWhaleUnsubLoading(false);
+    }
+  };
+
   const handleWhale = async () => {
     if (!store) return;
     setWhaleLoading(true);
     setError('');
     try {
-      const updated = await storesApi.update(store.id, { ...store, whalePass: true });
+      const updated = await storesApi.activateWhalePass(store.id);
       setStore(updated);
       authModel.saveUser(updated);
       window.dispatchEvent(new Event('user-updated'));
@@ -200,26 +245,63 @@ export default function ProfilePage() {
 
             {showWhaleSuccess && (
               <div style={{ background: 'rgba(99,179,237,.12)', border: '1px solid rgba(99,179,237,.3)', borderRadius: 6, padding: '0.5rem 0.875rem', fontSize: '0.75rem', color: 'var(--c-whale-s)', marginBottom: '0.75rem' }}>
-                🐋 Pass Whale activé ! Profitez de vos avantages VIP.
+                🐋 Pass Whale activé ! {WHALE_PRICE} € débités de votre solde.
+              </div>
+            )}
+
+            {balance < WHALE_PRICE && (
+              <div style={{ background: 'rgba(255,77,77,.08)', border: '1px solid rgba(255,77,77,.2)', borderRadius: 6, padding: '0.5rem 0.875rem', fontSize: '0.75rem', color: 'var(--c-danger)', marginBottom: '0.75rem' }}>
+                Solde insuffisant — il vous manque {(WHALE_PRICE - balance).toLocaleString('fr-FR', { minimumFractionDigits: 2 })} € pour activer le Pass Whale.
               </div>
             )}
 
             <button
               onClick={() => void handleWhale()}
-              disabled={whaleLoading}
-              style={{ width: '100%', padding: '0.7rem', borderRadius: 8, border: '1px solid rgba(99,179,237,.4)', background: 'rgba(99,179,237,.12)', color: 'var(--c-whale-s)', fontWeight: 700, fontSize: '0.85rem', cursor: whaleLoading ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', opacity: whaleLoading ? 0.6 : 1 }}
+              disabled={whaleLoading || balance < WHALE_PRICE}
+              style={{ width: '100%', padding: '0.7rem', borderRadius: 8, border: '1px solid rgba(99,179,237,.4)', background: 'rgba(99,179,237,.12)', color: balance < WHALE_PRICE ? 'var(--c-text3)' : 'var(--c-whale-s)', fontWeight: 700, fontSize: '0.85rem', cursor: (whaleLoading || balance < WHALE_PRICE) ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', opacity: (whaleLoading || balance < WHALE_PRICE) ? 0.5 : 1 }}
             >
-              {whaleLoading ? 'Activation…' : '🐋 Activer le Pass Whale'}
+              {whaleLoading ? 'Activation…' : `🐋 Activer le Pass Whale — ${WHALE_PRICE} €`}
             </button>
           </div>
         ) : (
-          <div style={{ background: 'rgba(99,179,237,.06)', border: '1px solid rgba(99,179,237,.2)', borderRadius: 12, padding: '1rem 1.75rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <span style={{ fontSize: '1.4rem' }}>🐋</span>
-            <div>
-              <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--c-whale-s)' }}>Pass Whale actif</div>
-              <div style={{ fontSize: '0.72rem', color: 'var(--c-text3)' }}>Vous bénéficiez de tous les avantages VIP.</div>
+          <div style={{ background: 'rgba(99,179,237,.06)', border: '1px solid rgba(99,179,237,.2)', borderRadius: 12, padding: '1.25rem 1.75rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+              <span style={{ fontSize: '1.4rem' }}>🐋</span>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--c-whale-s)' }}>Pass Whale actif</div>
+                <div style={{ fontSize: '0.72rem', color: 'var(--c-text3)' }}>Vous bénéficiez de tous les avantages VIP.</div>
+              </div>
+              <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                <div style={{ fontSize: '0.62rem', color: 'var(--c-text3)', marginBottom: '0.15rem' }}>
+                  {balance >= WHALE_PRICE ? 'Renouvellement auto dans' : 'Expiration dans'}
+                </div>
+                <div style={{
+                  fontWeight: 700, fontSize: '0.88rem', fontVariantNumeric: 'tabular-nums',
+                  color: whaleExpirySeconds < 300 ? 'var(--c-danger)' : 'var(--c-whale-s)',
+                }}>
+                  {whaleCountdown}
+                </div>
+              </div>
             </div>
-            <span style={{ marginLeft: 'auto', fontSize: '0.72rem', color: 'var(--c-text3)' }}>Résiliable à tout moment</span>
+            {balance < WHALE_PRICE && (
+              <div style={{ background: 'rgba(255,77,77,.08)', border: '1px solid rgba(255,77,77,.2)', borderRadius: 6, padding: '0.5rem 0.875rem', fontSize: '0.75rem', color: 'var(--c-danger)', marginBottom: '0.875rem' }}>
+                Solde insuffisant pour le renouvellement automatique — rechargez au moins {(WHALE_PRICE - balance).toLocaleString('fr-FR', { minimumFractionDigits: 2 })} € pour éviter la résiliation.
+              </div>
+            )}
+
+            {showWhaleCancelled && (
+              <div style={{ background: 'rgba(255,255,255,.05)', border: '1px solid var(--c-border)', borderRadius: 6, padding: '0.5rem 0.875rem', fontSize: '0.75rem', color: 'var(--c-text3)', marginBottom: '0.75rem' }}>
+                Pass Whale résilié. Vos avantages VIP ont été désactivés.
+              </div>
+            )}
+
+            <button
+              onClick={() => void handleWhaleUnsub()}
+              disabled={whaleUnsubLoading}
+              style={{ width: '100%', padding: '0.55rem', borderRadius: 8, border: '1px solid rgba(255,77,77,.25)', background: 'rgba(255,77,77,.06)', color: 'var(--c-danger)', fontWeight: 600, fontSize: '0.8rem', cursor: whaleUnsubLoading ? 'default' : 'pointer', opacity: whaleUnsubLoading ? 0.5 : 1 }}
+            >
+              {whaleUnsubLoading ? 'Résiliation…' : 'Se désabonner'}
+            </button>
           </div>
         )}
 

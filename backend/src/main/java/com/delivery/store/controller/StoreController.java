@@ -60,6 +60,16 @@ public class StoreController {
         return ResponseEntity.ok(storeService.updateStore(id, dto));
     }
 
+    @PostMapping("/{id}/whale-pass")
+    public ResponseEntity<StoreDto> activateWhalePass(@PathVariable Long id) {
+        return ResponseEntity.ok(storeService.activateWhalePass(id));
+    }
+
+    @DeleteMapping("/{id}/whale-pass")
+    public ResponseEntity<StoreDto> deactivateWhalePass(@PathVariable Long id) {
+        return ResponseEntity.ok(storeService.deactivateWhalePass(id));
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteStore(@PathVariable Long id) {
         storeService.deleteStore(id);

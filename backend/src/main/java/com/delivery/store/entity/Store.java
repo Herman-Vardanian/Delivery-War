@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "stores")
@@ -42,5 +43,7 @@ public class Store {
     private Boolean whalePass;
 
     private Long passId;
+
+    private LocalDateTime whalePassExpiry;
 
 }

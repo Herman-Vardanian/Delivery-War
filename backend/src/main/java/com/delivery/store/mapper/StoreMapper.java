@@ -25,6 +25,7 @@ public class StoreMapper {
                 .totalSpent(s.getTotalSpent())
                 .whalePass(s.getWhalePass())
                 .passId(s.getPassId())
+                .whalePassExpiry(s.getWhalePassExpiry() != null ? s.getWhalePassExpiry().toString() : null)
                 .build();
     }
 

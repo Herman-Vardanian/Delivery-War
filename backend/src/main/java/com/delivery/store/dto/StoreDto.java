@@ -22,4 +22,5 @@ public class StoreDto {
     private BigDecimal totalSpent;
     private Boolean whalePass;
     private Long passId;
+    private String whalePassExpiry;
 }
