@@ -10,7 +10,6 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/auctions")
@@ -63,7 +62,7 @@ public class AuctionController {
 
     @PutMapping("/{id}")
     public ResponseEntity<AuctionDto> updateAuction(@PathVariable Long id,
-                                                    @Validated @RequestBody AuctionDto dto) {
+            @Validated @RequestBody AuctionDto dto) {
         return ResponseEntity.ok(auctionService.updateAuction(id, dto));
     }
 }
