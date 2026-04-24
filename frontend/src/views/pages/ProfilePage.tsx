@@ -6,7 +6,7 @@ import type { Store } from '../../interfaces/Store';
 function useWhaleCountdown(expiry: string | null | undefined): string {
   const calc = useCallback(() => {
     if (!expiry) return 0;
-    return Math.max(0, Math.floor((new Date(expiry).getTime() - Date.now()) / 1000));
+    return Math.max(0, Math.floor((new Date(expiry + 'Z').getTime() - Date.now()) / 1000));
   }, [expiry]);
 
   const [s, setS] = useState(calc);
@@ -16,7 +16,6 @@ function useWhaleCountdown(expiry: string | null | undefined): string {
     return () => clearInterval(id);
   }, [calc]);
 
-  if (!expiry || s <= 0) return 'Expiration imminente';
   const m = Math.floor(s / 60);
   const sec = s % 60;
   return `${m > 0 ? `${m}m ` : ''}${String(sec).padStart(2, '0')}s`;
@@ -85,7 +84,7 @@ export default function ProfilePage() {
   const WHALE_PRICE = whalePrice;
   const whaleCountdown = useWhaleCountdown(store?.whalePassExpiry);
   const whaleExpirySeconds = store?.whalePassExpiry
-    ? Math.max(0, Math.floor((new Date(store.whalePassExpiry).getTime() - Date.now()) / 1000))
+    ? Math.max(0, Math.floor((new Date(store.whalePassExpiry + 'Z').getTime() - Date.now()) / 1000))
     : 0;
 
   const handleWhaleUnsub = async () => {
@@ -288,24 +287,45 @@ export default function ProfilePage() {
                 <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--c-whale-s)' }}>Pass Whale actif</div>
                 <div style={{ fontSize: '0.72rem', color: 'var(--c-text3)' }}>Vous bénéficiez de tous les avantages VIP.</div>
               </div>
-              <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                <div style={{ fontSize: '0.62rem', color: 'var(--c-text3)', marginBottom: '0.15rem' }}>
-                  {balance >= WHALE_PRICE ? 'Renouvellement auto dans' : 'Expiration dans'}
+            </div>
+
+            {/* ── Bloc renouvellement ── */}
+            <div style={{
+              background: balance >= WHALE_PRICE ? 'rgba(99,179,237,.08)' : 'rgba(255,77,77,.06)',
+              border: `1px solid ${balance >= WHALE_PRICE ? 'rgba(99,179,237,.2)' : 'rgba(255,77,77,.2)'}`,
+              borderRadius: 8, padding: '0.75rem 1rem', marginBottom: '0.875rem',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                <div style={{ fontSize: '0.72rem', color: 'var(--c-text3)' }}>
+                  {balance >= WHALE_PRICE ? '🔄 Renouvellement automatique dans' : '⏳ Expiration dans'}
                 </div>
                 <div style={{
-                  fontWeight: 700, fontSize: '0.88rem', fontVariantNumeric: 'tabular-nums',
-                  color: whaleExpirySeconds < 300 ? 'var(--c-danger)' : 'var(--c-whale-s)',
+                  fontWeight: 800, fontSize: '1.1rem', fontVariantNumeric: 'tabular-nums',
+                  color: whaleExpirySeconds < 300 ? 'var(--c-danger)' : balance >= WHALE_PRICE ? 'var(--c-whale-s)' : 'var(--c-text2)',
                 }}>
                   {whaleCountdown}
                 </div>
               </div>
-            </div>
-            {balance < WHALE_PRICE && (
-              <div style={{ background: 'rgba(255,77,77,.08)', border: '1px solid rgba(255,77,77,.2)', borderRadius: 6, padding: '0.5rem 0.875rem', fontSize: '0.75rem', color: 'var(--c-danger)', marginBottom: '0.875rem' }}>
-                Solde insuffisant pour le renouvellement automatique — rechargez au moins {(WHALE_PRICE - balance).toLocaleString('fr-FR', { minimumFractionDigits: 2 })} € pour éviter la résiliation.
+              {/* barre de progression — 30 min = 1800s */}
+              <div style={{ height: 4, background: 'rgba(255,255,255,.08)', borderRadius: 999, overflow: 'hidden' }}>
+                <div style={{
+                  height: '100%', borderRadius: 999,
+                  width: `${Math.min(100, (whaleExpirySeconds / 1800) * 100)}%`,
+                  background: whaleExpirySeconds < 300
+                    ? 'var(--c-danger)'
+                    : balance >= WHALE_PRICE
+                    ? 'linear-gradient(90deg, var(--c-whale-s), #63b3ed)'
+                    : 'var(--c-text3)',
+                  transition: 'width 1s linear',
+                }} />
               </div>
-            )}
-
+              <div style={{ fontSize: '0.65rem', marginTop: '0.4rem', color: balance >= WHALE_PRICE ? 'var(--c-text3)' : 'var(--c-danger)' }}>
+                {balance >= WHALE_PRICE
+                  ? `${WHALE_PRICE} € seront débités de votre solde lors du renouvellement.`
+                  : `Solde insuffisant — rechargez au moins ${(WHALE_PRICE - balance).toLocaleString('fr-FR', { minimumFractionDigits: 2 })} € pour éviter la résiliation.`
+                }
+              </div>
+            </div>
             {showWhaleCancelled && (
               <div style={{ background: 'rgba(255,255,255,.05)', border: '1px solid var(--c-border)', borderRadius: 6, padding: '0.5rem 0.875rem', fontSize: '0.75rem', color: 'var(--c-text3)', marginBottom: '0.75rem' }}>
                 Pass Whale résilié. Vos avantages VIP ont été désactivés.
