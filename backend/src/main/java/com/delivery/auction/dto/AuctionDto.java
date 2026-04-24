@@ -20,4 +20,5 @@ public class AuctionDto {
     private String slotStartTime;
     private String slotEndTime;
     private Boolean whaleOnly;
+    private String region;
 }

@@ -9,8 +9,7 @@ import AdminDashboardPage from '../views/pages/AdminDashboardPage';
 import LeaderboardPage from '../views/pages/LeaderboardPage';
 import Navbar from '../views/components/Navbar';
 import AppNavbar from '../views/components/AppNavbar';
-import { RequireAuth, RequireAdmin } from './guards';
-import { authModel } from '../models/authModel';
+import { RequireAuth, RequireAdmin, GuestRoute } from './guards';
 
 function PublicLayout({ children, showNav = true }: { children: ReactNode; showNav?: boolean }) {
   return (
@@ -36,27 +35,15 @@ export default function AppRouter() {
       <Routes>
         <Route
           path="/"
-          element={
-            authModel.isAuthenticated()
-              ? <Navigate to="/dashboard" replace />
-              : <PublicLayout><IndexPage /></PublicLayout>
-          }
+          element={<GuestRoute><PublicLayout><IndexPage /></PublicLayout></GuestRoute>}
         />
         <Route
           path="/login"
-          element={
-            authModel.isAuthenticated()
-              ? <Navigate to="/dashboard" replace />
-              : <PublicLayout showNav={false}><LoginPage /></PublicLayout>
-          }
+          element={<GuestRoute><PublicLayout showNav={false}><LoginPage /></PublicLayout></GuestRoute>}
         />
         <Route
           path="/register"
-          element={
-            authModel.isAuthenticated()
-              ? <Navigate to="/dashboard" replace />
-              : <PublicLayout showNav={false}><RegisterPage /></PublicLayout>
-          }
+          element={<GuestRoute><PublicLayout showNav={false}><RegisterPage /></PublicLayout></GuestRoute>}
         />
         <Route
           path="/dashboard"
