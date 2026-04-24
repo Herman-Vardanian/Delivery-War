@@ -107,9 +107,17 @@ export default function DashboardPage() {
     const startBid = parseFloat(newAuction.startBid);
     if (isNaN(startBid) || startBid <= 0) { setCreateError('Prix de départ invalide.'); return; }
 
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const deliveryDay = new Date(newAuction.deliveryDate);
+    deliveryDay.setHours(0, 0, 0, 0);
+    if (deliveryDay <= today) { setCreateError('La date de livraison doit être strictement après aujourd\'hui.'); return; }
+
     const deliveryStart = new Date(`${newAuction.deliveryDate}T${newAuction.deliveryStartTime}`);
     const deliveryEnd   = new Date(`${newAuction.deliveryDate}T${newAuction.deliveryEndTime}`);
     const auctionBegin  = newAuction.auctionStart ? new Date(newAuction.auctionStart) : new Date();
+
+    if (auctionBegin <= new Date()) { setCreateError("La date de début de l'enchère doit être strictement après maintenant."); return; }
     const durationMin   = parseInt(newAuction.durationMin) || 5;
     const auctionEnd    = new Date(auctionBegin.getTime() + durationMin * 60 * 1000);
 
