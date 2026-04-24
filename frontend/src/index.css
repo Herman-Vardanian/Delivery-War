@@ -93,6 +93,14 @@ body { background: var(--c-bg); color: var(--c-text); font-family: var(--font-b)
   40% { transform: scale(1.12); }
   100%{ transform: scale(1); }
 }
+@keyframes toast-in {
+  from { transform: translateX(110%); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+@keyframes toast-progress {
+  from { width: 100%; }
+  to   { width: 0%; }
+}
 
 /* ── SHARED BG LAYER ─────────────────────────────────────── */
 .bg-fixed { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }

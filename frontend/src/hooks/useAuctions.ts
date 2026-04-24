@@ -158,8 +158,15 @@ export function useAuctions() {
       subs.push(
         client.subscribe('/topic/bids', msg => {
           const bid = JSON.parse(msg.body) as Bid;
-          setHighestBids(prev => new Map(prev).set(bid.auctionId, bid));
-          // If this bid is mine, record it in myBids too
+          setHighestBids(prev => {
+            const prevHighest = prev.get(bid.auctionId);
+            if (user?.id && prevHighest?.storeId === user.id && bid.storeId !== user.id) {
+              window.dispatchEvent(new CustomEvent('auction-outbid', {
+                detail: { auctionId: bid.auctionId, newAmount: bid.amount },
+              }));
+            }
+            return new Map(prev).set(bid.auctionId, bid);
+          });
           if (bid.storeId === user?.id) {
             setMyBids(prev => {
               const next = new Map(prev);
