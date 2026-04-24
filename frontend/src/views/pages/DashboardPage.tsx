@@ -73,6 +73,7 @@ interface NewAuctionForm {
   auctionStart: string;
   durationMin: string;
   startBid: string;
+  whaleOnly: boolean;
 }
 
 export default function DashboardPage() {
@@ -93,7 +94,7 @@ export default function DashboardPage() {
 
   const [newAuction, setNewAuction] = useState<NewAuctionForm>({
     deliveryDate: '', deliveryStartTime: '', deliveryEndTime: '',
-    auctionStart: nowLocalInput(), durationMin: '5', startBid: '',
+    auctionStart: nowLocalInput(), durationMin: '5', startBid: '', whaleOnly: false,
   });
   const [createError, setCreateError] = useState('');
   const [creating, setCreating] = useState(false);
@@ -127,8 +128,9 @@ export default function DashboardPage() {
         endTime:       toIsoLocal(auctionEnd),
         status:        AuctionStatus.OPEN,
         deliverySlotId: slot.id,
+        whaleOnly:     newAuction.whaleOnly,
       });
-      setNewAuction({ deliveryDate: '', deliveryStartTime: '', deliveryEndTime: '', auctionStart: nowLocalInput(), durationMin: '5', startBid: '' });
+      setNewAuction({ deliveryDate: '', deliveryStartTime: '', deliveryEndTime: '', auctionStart: nowLocalInput(), durationMin: '5', startBid: '', whaleOnly: false });
       // WS /topic/auctions push handles the list refresh automatically
     } catch (e: unknown) {
       setCreateError(e instanceof Error ? e.message : 'Erreur création');
@@ -231,6 +233,16 @@ export default function DashboardPage() {
                 {creating ? '…' : '+ Créer'}
               </button>
             </div>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.75rem', cursor: 'pointer', width: 'fit-content' }}>
+              <input
+                type="checkbox"
+                checked={newAuction.whaleOnly}
+                onChange={e => setNewAuction(p => ({ ...p, whaleOnly: e.target.checked }))}
+                style={{ accentColor: 'var(--c-whale-s)', width: 15, height: 15, cursor: 'pointer' }}
+              />
+              <span style={{ fontSize: '0.78rem', color: 'var(--c-whale-s)', fontWeight: 700 }}>Réservé Pass Whale</span>
+              <span style={{ fontSize: '0.72rem', color: 'var(--c-text3)' }}>— seuls les détenteurs du Pass Whale peuvent enchérir</span>
+            </label>
             {createError && <div style={{ marginTop: '0.5rem', fontSize: '0.75rem', color: 'var(--c-danger)' }}>{createError}</div>}
           </div>
         )}
@@ -269,11 +281,22 @@ export default function DashboardPage() {
               {active.map(a => {
                 const cfg = STATUS_CONFIG[a.status];
                 const isLeading = a.status === 'leading';
+                const isWhaleBlocked = a.whaleOnly && !user?.whalePass;
+                const bidDisabled = isLeading || isWhaleBlocked;
                 return (
-                  <div key={a.id} style={{ background: 'var(--c-surf)', border: `1px solid ${cfg.border}`, borderRadius: 10, padding: '1rem 1.25rem', display: 'grid', gridTemplateColumns: '1fr auto auto auto', alignItems: 'center', gap: '1.5rem' }}>
+                  <div key={a.id} style={{ background: 'var(--c-surf)', border: `1px solid ${a.whaleOnly ? 'rgba(99,179,237,.35)' : cfg.border}`, borderRadius: 10, padding: '1rem 1.25rem', display: 'grid', gridTemplateColumns: '1fr auto auto auto', alignItems: 'center', gap: '1.5rem' }}>
                     <div>
-                      <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--c-text)', marginBottom: '0.2rem' }}>Enchère #{a.id}</div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--c-text3)' }}>Livraison {a.slot}</div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.2rem' }}>
+                        <span style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--c-text)' }}>Enchère #{a.id}</span>
+                        {a.whaleOnly && (
+                          <span style={{ fontSize: '0.62rem', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: 20, background: 'rgba(99,179,237,.12)', border: '1px solid rgba(99,179,237,.3)', color: 'var(--c-whale-s)' }}>
+                            Pass Whale
+                          </span>
+                        )}
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--c-text3)' }}>
+                        Livraison {a.slotDate && <><span style={{ color: 'var(--c-text2)', fontWeight: 600 }}>{a.slotDate}</span> · </>}{a.slot}
+                      </div>
                     </div>
                     <div style={{ textAlign: 'center' }}>
                       <div style={{ fontSize: '0.62rem', color: 'var(--c-text3)', marginBottom: '0.15rem' }}>Temps restant</div>
@@ -287,27 +310,33 @@ export default function DashboardPage() {
                       <span style={{ alignSelf: 'flex-end', fontSize: '0.65rem', fontWeight: 700, padding: '0.2rem 0.6rem', borderRadius: 20, background: cfg.bg, border: `1px solid ${cfg.border}`, color: cfg.color }}>
                         {cfg.label}
                       </span>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
-                        <div style={{ display: 'flex', gap: '0.4rem' }}>
-                          <input
-                            type="number"
-                            min={a.currentBid + 1}
-                            placeholder={`> ${a.currentBid} €`}
-                            disabled={isLeading}
-                            value={bidInputs[a.id] || ''}
-                            onChange={e => setBidInputs(p => ({ ...p, [a.id]: e.target.value }))}
-                            style={{ flex: 1, minWidth: 0, background: 'var(--c-bg)', border: '1px solid var(--c-border)', borderRadius: 6, padding: '0.35rem 0.5rem', fontSize: '0.78rem', color: isLeading ? 'var(--c-text3)' : 'var(--c-text)', outline: 'none', opacity: isLeading ? 0.5 : 1 }}
-                          />
-                          <button
-                            onClick={() => void placeBid(a.id, a.currentBid)}
-                            disabled={isLeading}
-                            style={{ padding: '0.35rem 0.75rem', background: isLeading ? 'var(--c-border)' : 'var(--c-pri)', border: 'none', borderRadius: 6, color: isLeading ? 'var(--c-text3)' : '#fff', fontWeight: 700, fontSize: '0.75rem', cursor: isLeading ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap' }}
-                          >
-                            Enchérir
-                          </button>
+                      {isWhaleBlocked ? (
+                        <div style={{ fontSize: '0.72rem', color: 'var(--c-whale-s)', textAlign: 'center', padding: '0.4rem 0.5rem', background: 'rgba(99,179,237,.08)', border: '1px solid rgba(99,179,237,.2)', borderRadius: 6 }}>
+                          Réservé Pass Whale
                         </div>
-                        {bidErrors[a.id] && <div style={{ fontSize: '0.68rem', color: 'var(--c-danger)' }}>{bidErrors[a.id]}</div>}
-                      </div>
+                      ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                          <div style={{ display: 'flex', gap: '0.4rem' }}>
+                            <input
+                              type="number"
+                              min={a.currentBid + 1}
+                              placeholder={`> ${a.currentBid} €`}
+                              disabled={bidDisabled}
+                              value={bidInputs[a.id] || ''}
+                              onChange={e => setBidInputs(p => ({ ...p, [a.id]: e.target.value }))}
+                              style={{ flex: 1, minWidth: 0, background: 'var(--c-bg)', border: '1px solid var(--c-border)', borderRadius: 6, padding: '0.35rem 0.5rem', fontSize: '0.78rem', color: bidDisabled ? 'var(--c-text3)' : 'var(--c-text)', outline: 'none', opacity: bidDisabled ? 0.5 : 1 }}
+                            />
+                            <button
+                              onClick={() => void placeBid(a.id, a.currentBid)}
+                              disabled={bidDisabled}
+                              style={{ padding: '0.35rem 0.75rem', background: bidDisabled ? 'var(--c-border)' : 'var(--c-pri)', border: 'none', borderRadius: 6, color: bidDisabled ? 'var(--c-text3)' : '#fff', fontWeight: 700, fontSize: '0.75rem', cursor: bidDisabled ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap' }}
+                            >
+                              Enchérir
+                            </button>
+                          </div>
+                          {bidErrors[a.id] && <div style={{ fontSize: '0.68rem', color: 'var(--c-danger)' }}>{bidErrors[a.id]}</div>}
+                        </div>
+                      )}
                     </div>
                   </div>
                 );
@@ -333,7 +362,9 @@ export default function DashboardPage() {
                 <div key={a.id} style={{ background: 'var(--c-surf)', border: '1px solid var(--c-border)', borderRadius: 10, padding: '0.875rem 1.25rem', display: 'grid', gridTemplateColumns: '1fr auto auto auto', alignItems: 'center', gap: '1.5rem', opacity: 0.7 }}>
                   <div>
                     <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--c-text)', marginBottom: '0.15rem' }}>Enchère #{a.id}</div>
-                    <div style={{ fontSize: '0.72rem', color: 'var(--c-text3)' }}>Livraison {a.slot}</div>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--c-text3)' }}>
+                      Livraison {a.slotDate && <><span style={{ color: 'var(--c-text2)', fontWeight: 600 }}>{a.slotDate}</span> · </>}{a.slot}
+                    </div>
                   </div>
                   <div><CountDown startTime={a.auctionStart} /></div>
                   <div style={{ fontWeight: 700, fontSize: '0.88rem', color: 'var(--c-text3)' }}>À partir de € {a.startPrice}</div>
@@ -359,7 +390,9 @@ export default function DashboardPage() {
                   <div key={a.id} style={{ background: 'var(--c-surf)', border: '1px solid var(--c-border)', borderRadius: 10, padding: '0.875rem 1.25rem', display: 'grid', gridTemplateColumns: '1fr auto auto auto', alignItems: 'center', gap: '1.5rem', opacity: 0.7 }}>
                     <div>
                       <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--c-text)', marginBottom: '0.15rem' }}>Enchère #{a.id}</div>
-                      <div style={{ fontSize: '0.72rem', color: 'var(--c-text3)' }}>Livraison {a.slot}</div>
+                      <div style={{ fontSize: '0.72rem', color: 'var(--c-text3)' }}>
+                        Livraison {a.slotDate && <><span style={{ color: 'var(--c-text2)', fontWeight: 600 }}>{a.slotDate}</span> · </>}{a.slot}
+                      </div>
                     </div>
                     <div style={{ fontSize: '0.72rem', color: 'var(--c-text3)' }}>Terminé</div>
                     <div style={{ fontWeight: 800, fontSize: '1rem', color: cfg.color }}>€ {a.currentBid}</div>

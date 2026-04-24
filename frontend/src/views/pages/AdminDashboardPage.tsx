@@ -9,6 +9,7 @@ interface AdminAuction {
   secondsLeft: number;
   status: 'active' | 'closed';
   winner: string;
+  whaleOnly: boolean;
 }
 
 interface MockStore {
@@ -21,12 +22,12 @@ interface MockStore {
 }
 
 const MOCK_AUCTIONS: AdminAuction[] = [
-  { id: 1, zone: 'Paris 18e', slot: '09h–11h', currentBid: 137, participants: 4, secondsLeft: 142, status: 'active',  winner: 'PARIS-NORD-07' },
-  { id: 2, zone: 'Paris 11e', slot: '14h–16h', currentBid: 182, participants: 6, secondsLeft: 38,  status: 'active',  winner: 'BOULANGERIE-DUPONT' },
-  { id: 3, zone: 'Paris 5e',  slot: '10h–12h', currentBid: 95,  participants: 3, secondsLeft: 310, status: 'active',  winner: 'FROMAGERIE-LEFEBVRE' },
-  { id: 4, zone: 'Paris 13e', slot: '16h–18h', currentBid: 210, participants: 8, secondsLeft: 72,  status: 'active',  winner: 'TRAITEUR-AZIZ' },
-  { id: 5, zone: 'Paris 9e',  slot: '08h–10h', currentBid: 88,  participants: 2, secondsLeft: 0,   status: 'closed',  winner: 'PARIS-NORD-07' },
-  { id: 6, zone: 'Paris 3e',  slot: '13h–15h', currentBid: 165, participants: 5, secondsLeft: 0,   status: 'closed',  winner: 'ÉPICERIE-MARTIN' },
+  { id: 1, zone: 'Paris 18e', slot: '09h–11h', currentBid: 137, participants: 4, secondsLeft: 142, status: 'active',  winner: 'PARIS-NORD-07',         whaleOnly: false },
+  { id: 2, zone: 'Paris 11e', slot: '14h–16h', currentBid: 182, participants: 6, secondsLeft: 38,  status: 'active',  winner: 'BOULANGERIE-DUPONT',     whaleOnly: true  },
+  { id: 3, zone: 'Paris 5e',  slot: '10h–12h', currentBid: 95,  participants: 3, secondsLeft: 310, status: 'active',  winner: 'FROMAGERIE-LEFEBVRE',    whaleOnly: false },
+  { id: 4, zone: 'Paris 13e', slot: '16h–18h', currentBid: 210, participants: 8, secondsLeft: 72,  status: 'active',  winner: 'TRAITEUR-AZIZ',          whaleOnly: false },
+  { id: 5, zone: 'Paris 9e',  slot: '08h–10h', currentBid: 88,  participants: 2, secondsLeft: 0,   status: 'closed',  winner: 'PARIS-NORD-07',          whaleOnly: false },
+  { id: 6, zone: 'Paris 3e',  slot: '13h–15h', currentBid: 165, participants: 5, secondsLeft: 0,   status: 'closed',  winner: 'ÉPICERIE-MARTIN',        whaleOnly: true  },
 ];
 
 const MOCK_STORES: MockStore[] = [
@@ -57,7 +58,7 @@ export default function AdminDashboardPage() {
   const [tab, setTab] = useState<'auctions' | 'stores'>('auctions');
   const [auctions, setAuctions] = useState<AdminAuction[]>(MOCK_AUCTIONS);
   const [showNewForm, setShowNewForm] = useState(false);
-  const [newAuction, setNewAuction] = useState({ zone: ZONES[0]!, slot: SLOTS[0]!, startBid: '' });
+  const [newAuction, setNewAuction] = useState({ zone: ZONES[0]!, slot: SLOTS[0]!, startBid: '', whaleOnly: false });
 
   const activeCount   = auctions.filter((a) => a.status === 'active').length;
   const whaleCount    = MOCK_STORES.filter((s) => s.whalePass).length;
@@ -74,8 +75,9 @@ export default function AdminDashboardPage() {
       secondsLeft: 600,
       status: 'active' as const,
       winner: '—',
+      whaleOnly: newAuction.whaleOnly,
     }]);
-    setNewAuction({ zone: ZONES[0]!, slot: SLOTS[0]!, startBid: '' });
+    setNewAuction({ zone: ZONES[0]!, slot: SLOTS[0]!, startBid: '', whaleOnly: false });
     setShowNewForm(false);
   };
 
@@ -136,44 +138,56 @@ export default function AdminDashboardPage() {
 
             {/* Formulaire nouvelle enchère */}
             {showNewForm && (
-              <div style={{ background: 'var(--c-surf)', border: '1px solid rgba(255,107,26,.3)', borderRadius: 10, padding: '1.25rem', marginBottom: '1rem', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr auto', gap: '0.75rem', alignItems: 'flex-end' }}>
-                <div>
-                  <div style={{ fontSize: '0.65rem', color: 'var(--c-text3)', marginBottom: '0.3rem', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Zone</div>
-                  <select
-                    value={newAuction.zone}
-                    onChange={(e) => setNewAuction((p) => ({ ...p, zone: e.target.value }))}
-                    style={{ width: '100%', background: 'var(--c-bg)', border: '1px solid var(--c-border)', borderRadius: 6, padding: '0.5rem 0.75rem', fontSize: '0.82rem', color: 'var(--c-text)', outline: 'none' }}
+              <div style={{ background: 'var(--c-surf)', border: '1px solid rgba(255,107,26,.3)', borderRadius: 10, padding: '1.25rem', marginBottom: '1rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr auto', gap: '0.75rem', alignItems: 'flex-end' }}>
+                  <div>
+                    <div style={{ fontSize: '0.65rem', color: 'var(--c-text3)', marginBottom: '0.3rem', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Zone</div>
+                    <select
+                      value={newAuction.zone}
+                      onChange={(e) => setNewAuction((p) => ({ ...p, zone: e.target.value }))}
+                      style={{ width: '100%', background: 'var(--c-bg)', border: '1px solid var(--c-border)', borderRadius: 6, padding: '0.5rem 0.75rem', fontSize: '0.82rem', color: 'var(--c-text)', outline: 'none' }}
+                    >
+                      {ZONES.map((z) => <option key={z} value={z}>{z}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '0.65rem', color: 'var(--c-text3)', marginBottom: '0.3rem', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Créneau</div>
+                    <select
+                      value={newAuction.slot}
+                      onChange={(e) => setNewAuction((p) => ({ ...p, slot: e.target.value }))}
+                      style={{ width: '100%', background: 'var(--c-bg)', border: '1px solid var(--c-border)', borderRadius: 6, padding: '0.5rem 0.75rem', fontSize: '0.82rem', color: 'var(--c-text)', outline: 'none' }}
+                    >
+                      {SLOTS.map((s) => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '0.65rem', color: 'var(--c-text3)', marginBottom: '0.3rem', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Mise de départ (€)</div>
+                    <input
+                      type="number"
+                      min="1"
+                      placeholder="Ex. 50"
+                      value={newAuction.startBid}
+                      onChange={(e) => setNewAuction((p) => ({ ...p, startBid: e.target.value }))}
+                      style={{ width: '100%', background: 'var(--c-bg)', border: '1px solid var(--c-border)', borderRadius: 6, padding: '0.5rem 0.75rem', fontSize: '0.82rem', color: 'var(--c-text)', outline: 'none', boxSizing: 'border-box' }}
+                    />
+                  </div>
+                  <button
+                    onClick={createAuction}
+                    style={{ padding: '0.5rem 1.25rem', background: 'var(--c-success)', border: 'none', borderRadius: 6, color: '#fff', fontWeight: 700, fontSize: '0.78rem', cursor: 'pointer', whiteSpace: 'nowrap' }}
                   >
-                    {ZONES.map((z) => <option key={z} value={z}>{z}</option>)}
-                  </select>
+                    Créer
+                  </button>
                 </div>
-                <div>
-                  <div style={{ fontSize: '0.65rem', color: 'var(--c-text3)', marginBottom: '0.3rem', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Créneau</div>
-                  <select
-                    value={newAuction.slot}
-                    onChange={(e) => setNewAuction((p) => ({ ...p, slot: e.target.value }))}
-                    style={{ width: '100%', background: 'var(--c-bg)', border: '1px solid var(--c-border)', borderRadius: 6, padding: '0.5rem 0.75rem', fontSize: '0.82rem', color: 'var(--c-text)', outline: 'none' }}
-                  >
-                    {SLOTS.map((s) => <option key={s} value={s}>{s}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <div style={{ fontSize: '0.65rem', color: 'var(--c-text3)', marginBottom: '0.3rem', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Mise de départ (€)</div>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.875rem', cursor: 'pointer', width: 'fit-content' }}>
                   <input
-                    type="number"
-                    min="1"
-                    placeholder="Ex. 50"
-                    value={newAuction.startBid}
-                    onChange={(e) => setNewAuction((p) => ({ ...p, startBid: e.target.value }))}
-                    style={{ width: '100%', background: 'var(--c-bg)', border: '1px solid var(--c-border)', borderRadius: 6, padding: '0.5rem 0.75rem', fontSize: '0.82rem', color: 'var(--c-text)', outline: 'none', boxSizing: 'border-box' }}
+                    type="checkbox"
+                    checked={newAuction.whaleOnly}
+                    onChange={(e) => setNewAuction((p) => ({ ...p, whaleOnly: e.target.checked }))}
+                    style={{ accentColor: 'var(--c-whale-s)', width: 15, height: 15, cursor: 'pointer' }}
                   />
-                </div>
-                <button
-                  onClick={createAuction}
-                  style={{ padding: '0.5rem 1.25rem', background: 'var(--c-success)', border: 'none', borderRadius: 6, color: '#fff', fontWeight: 700, fontSize: '0.78rem', cursor: 'pointer', whiteSpace: 'nowrap' }}
-                >
-                  Créer
-                </button>
+                  <span style={{ fontSize: '0.78rem', color: 'var(--c-whale-s)', fontWeight: 700 }}>Réservé Pass Whale</span>
+                  <span style={{ fontSize: '0.72rem', color: 'var(--c-text3)' }}>— seuls les détenteurs du Pass Whale peuvent enchérir</span>
+                </label>
               </div>
             )}
 
@@ -182,7 +196,7 @@ export default function AdminDashboardPage() {
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid var(--c-border)' }}>
-                    {['Zone', 'Créneau', 'Mise actuelle', 'Enchérisseurs', 'Temps', 'En tête', 'Statut', ''].map((h) => (
+                    {['Zone', 'Créneau', 'Mise actuelle', 'Enchérisseurs', 'Temps', 'En tête', 'Accès', 'Statut', ''].map((h) => (
                       <th key={h} style={{ padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--c-text3)', fontWeight: 700 }}>{h}</th>
                     ))}
                   </tr>
@@ -198,6 +212,15 @@ export default function AdminDashboardPage() {
                         {a.status === 'closed' ? '—' : `${Math.floor(a.secondsLeft / 60)}m ${a.secondsLeft % 60}s`}
                       </td>
                       <td style={{ padding: '0.875rem 1rem', fontSize: '0.78rem', color: 'var(--c-text2)', maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.winner}</td>
+                      <td style={{ padding: '0.875rem 1rem' }}>
+                        {a.whaleOnly ? (
+                          <span style={{ fontSize: '0.62rem', fontWeight: 700, padding: '0.2rem 0.55rem', borderRadius: 20, background: 'rgba(99,179,237,.1)', border: '1px solid rgba(99,179,237,.25)', color: 'var(--c-whale-s)', whiteSpace: 'nowrap' }}>
+                            Pass Whale
+                          </span>
+                        ) : (
+                          <span style={{ fontSize: '0.62rem', color: 'var(--c-text3)' }}>Tous</span>
+                        )}
+                      </td>
                       <td style={{ padding: '0.875rem 1rem' }}>
                         <span style={{
                           fontSize: '0.65rem', fontWeight: 700, padding: '0.2rem 0.6rem', borderRadius: 20,

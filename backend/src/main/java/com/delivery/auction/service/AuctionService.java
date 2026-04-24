@@ -90,6 +90,7 @@ public class AuctionService {
         auction.setStartTime(LocalDateTime.parse(dto.getStartTime()));
         auction.setEndTime(LocalDateTime.parse(dto.getEndTime()));
         auction.setStatus(dto.getStatus());
+        auction.setWhaleOnly(dto.getWhaleOnly() != null ? dto.getWhaleOnly() : false);
 
         if (slot != null) {
             auction.setDeliverySlot(slot);

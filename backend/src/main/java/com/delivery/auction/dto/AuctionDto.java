@@ -19,4 +19,5 @@ public class AuctionDto {
     private Long deliverySlotId;
     private String slotStartTime;
     private String slotEndTime;
+    private Boolean whaleOnly;
 }

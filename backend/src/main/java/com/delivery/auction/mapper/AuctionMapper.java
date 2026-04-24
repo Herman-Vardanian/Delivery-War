@@ -25,6 +25,7 @@ public class AuctionMapper {
                 .deliverySlotId(slot != null ? slot.getId() : null)
                 .slotStartTime(slot != null && slot.getStartTime() != null ? slot.getStartTime().toString() : null)
                 .slotEndTime(slot != null && slot.getEndTime() != null ? slot.getEndTime().toString() : null)
+                .whaleOnly(a.getWhaleOnly() != null ? a.getWhaleOnly() : false)
                 .build();
     }
 
@@ -40,6 +41,7 @@ public class AuctionMapper {
                 .endTime(LocalDateTime.parse(d.getEndTime()))
                 .status(d.getStatus())
                 .deliverySlot(slot)
+                .whaleOnly(d.getWhaleOnly() != null ? d.getWhaleOnly() : false)
                 .build();
     }
 }
