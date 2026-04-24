@@ -2,6 +2,10 @@ import { useState, useEffect, useCallback } from 'react';
 import { authModel } from '../../models/authModel';
 import { stores as storesApi } from '../../controllers/endpoints';
 import type { Store } from '../../interfaces/Store';
+import { useAuctions } from '../../hooks/useAuctions';
+
+const MONTHS_FR = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+const DAYS_FR   = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
 
 function useWhaleCountdown(expiry: string | null | undefined): string {
   const calc = useCallback(() => {
@@ -123,13 +127,35 @@ export default function ProfilePage() {
     }
   };
 
+  const { auctions } = useAuctions();
+
+  const [calYear,  setCalYear]  = useState(() => new Date().getFullYear());
+  const [calMonth, setCalMonth] = useState(() => new Date().getMonth());
+  const [calDay,   setCalDay]   = useState<string | null>(null);
+
+  const wonByDate = new Map<string, typeof auctions>();
+  for (const a of auctions) {
+    if (a.status === 'won' && a.slotDateIso) {
+      const list = wonByDate.get(a.slotDateIso) ?? [];
+      list.push(a);
+      wonByDate.set(a.slotDateIso, list);
+    }
+  }
+
+  const calFirstDay    = new Date(calYear, calMonth, 1);
+  const calDaysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+  const calStartOffset = (calFirstDay.getDay() + 6) % 7;
+  const calTotalCells  = Math.ceil((calStartOffset + calDaysInMonth) / 7) * 7;
+  const prevMonth = () => { if (calMonth === 0) { setCalMonth(11); setCalYear(y => y - 1); } else setCalMonth(m => m - 1); };
+  const nextMonth = () => { if (calMonth === 11) { setCalMonth(0); setCalYear(y => y + 1); } else setCalMonth(m => m + 1); };
+
   if (!store) return null;
 
   const balance = Number(store.balance ?? 0);
 
   return (
     <main style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem 1rem' }}>
-      <div style={{ width: '100%', maxWidth: 560, display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+      <div style={{ width: '100%', maxWidth: 620, display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
 
         {/* ── Header profil ── */}
         <div style={{ background: 'var(--c-surf)', border: '1px solid var(--c-border)', borderRadius: 12, padding: '1.5rem 1.75rem', display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
@@ -341,6 +367,75 @@ export default function ProfilePage() {
             </button>
           </div>
         )}
+
+        {/* ── Calendrier des livraisons ── */}
+        <div style={{ background: 'var(--c-surf)', border: '1px solid var(--c-border)', borderRadius: 12, padding: '1.25rem 1.5rem' }}>
+          <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--c-text)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <span>📦</span> Calendrier de livraisons
+          </div>
+          {wonByDate.size === 0 ? (
+            <div style={{ textAlign: 'center', color: 'var(--c-text3)', fontSize: '0.82rem', padding: '1.5rem 0' }}>
+              Aucune livraison remportée pour l&apos;instant.
+            </div>
+          ) : (
+            <>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                <button onClick={prevMonth} style={{ background: 'none', border: '1px solid var(--c-border)', borderRadius: 6, color: 'var(--c-text2)', cursor: 'pointer', padding: '0.3rem 0.75rem', fontSize: '0.85rem' }}>‹</button>
+                <div style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--c-text)', letterSpacing: '0.04em' }}>{MONTHS_FR[calMonth]} {calYear}</div>
+                <button onClick={nextMonth} style={{ background: 'none', border: '1px solid var(--c-border)', borderRadius: 6, color: 'var(--c-text2)', cursor: 'pointer', padding: '0.3rem 0.75rem', fontSize: '0.85rem' }}>›</button>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4, marginBottom: 4 }}>
+                {DAYS_FR.map(d => (
+                  <div key={d} style={{ textAlign: 'center', fontSize: '0.62rem', fontWeight: 700, color: 'var(--c-text3)', textTransform: 'uppercase', letterSpacing: '0.08em', padding: '0.25rem 0' }}>{d}</div>
+                ))}
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4 }}>
+                {Array.from({ length: calTotalCells }).map((_, i) => {
+                  const dayNum = i - calStartOffset + 1;
+                  if (dayNum < 1 || dayNum > calDaysInMonth) return <div key={i} />;
+                  const iso = `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
+                  const deliveries = wonByDate.get(iso);
+                  const isToday    = iso === new Date().toISOString().slice(0, 10);
+                  const isSelected = calDay === iso;
+                  return (
+                    <button key={i} onClick={() => setCalDay(isSelected ? null : iso)} style={{
+                      aspectRatio: '1', borderRadius: 8,
+                      border: isSelected ? '2px solid var(--c-success)' : isToday ? '1px solid var(--c-pri)' : '1px solid transparent',
+                      background: isSelected ? 'rgba(72,199,142,.15)' : deliveries ? 'rgba(72,199,142,.08)' : 'var(--c-bg)',
+                      color: deliveries ? 'var(--c-success)' : isToday ? 'var(--c-pri)' : 'var(--c-text3)',
+                      fontWeight: deliveries ? 700 : 400,
+                      fontSize: '0.82rem', cursor: deliveries ? 'pointer' : 'default',
+                      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
+                    }}>
+                      {dayNum}
+                      {deliveries && <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--c-success)', display: 'block' }} />}
+                    </button>
+                  );
+                })}
+              </div>
+              {calDay && wonByDate.get(calDay) && (
+                <div style={{ marginTop: '1rem', borderTop: '1px solid var(--c-border)', paddingTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  <div style={{ fontSize: '0.7rem', color: 'var(--c-text3)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.25rem' }}>
+                    Livraisons du {new Date(calDay + 'T12:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
+                  </div>
+                  {wonByDate.get(calDay)!.map(a => (
+                    <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: '0.875rem', background: 'rgba(72,199,142,.06)', border: '1px solid rgba(72,199,142,.2)', borderRadius: 8, padding: '0.625rem 0.875rem' }}>
+                      <span style={{ fontSize: '1.2rem' }}>📦</span>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--c-text)' }}>Créneau {a.slot}</div>
+                        {a.region && <div style={{ fontSize: '0.7rem', color: 'var(--c-text3)', marginTop: 2 }}>{a.region}</div>}
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: '0.62rem', color: 'var(--c-text3)' }}>Enchère #{a.id}</div>
+                        <div style={{ fontWeight: 700, fontSize: '0.88rem', color: 'var(--c-gold-s)' }}>🏆 € {a.currentBid}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+        </div>
 
       </div>
     </main>
