@@ -9,7 +9,7 @@ export default function AppNavbar() {
 
   const handleLogout = () => {
     authModel.removeUser();
-    navigate('/login');
+    navigate('/');
   };
 
   useEffect(() => {
