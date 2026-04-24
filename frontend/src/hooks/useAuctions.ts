@@ -11,12 +11,14 @@ export type DisplayStatus = 'leading' | 'outbid' | 'open' | 'pending' | 'won' | 
 export interface DisplayAuction {
   id: number;
   slot: string;
+  slotDate: string;
   auctionEnd: string;
   auctionStart: string;
   currentBid: number;
   myBid: number | null;
   status: DisplayStatus;
   startPrice: number;
+  whaleOnly: boolean;
 }
 
 function fmtHour(iso: string): string {
@@ -49,6 +51,10 @@ function buildDisplay(
     ? `${fmtHour(a.startTime)}–${fmtHour(a.endTime)}`
     : '—';
 
+  const slotDate = a.slotStartTime
+    ? new Date(a.slotStartTime + 'Z').toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
+    : '';
+
   let status: DisplayStatus;
   if (finished && !notStarted) {
     status = isLeading ? 'won' : 'lost';
@@ -65,12 +71,14 @@ function buildDisplay(
   return {
     id: a.id,
     slot,
+    slotDate,
     auctionEnd:   a.endTime   ?? '',
     auctionStart: a.startTime ?? '',
     currentBid,
     myBid,
     status,
     startPrice: a.startPrice ?? 0,
+    whaleOnly: a.whaleOnly ?? false,
   };
 }
 
