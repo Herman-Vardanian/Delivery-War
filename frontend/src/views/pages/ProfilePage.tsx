@@ -29,6 +29,7 @@ export default function ProfilePage() {
   const [customAmount, setCustomAmount] = useState('');
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [showTopupSuccess, setShowTopupSuccess] = useState(false);
+  const [lastTopupAmount, setLastTopupAmount] = useState(0);
   const [showWhaleSuccess, setShowWhaleSuccess] = useState(false);
   const [showWhaleCancelled, setShowWhaleCancelled] = useState(false);
   const [whaleUnsubLoading, setWhaleUnsubLoading] = useState(false);
@@ -69,6 +70,7 @@ export default function ProfilePage() {
       setStore(updated);
       authModel.saveUser(updated);
       window.dispatchEvent(new Event('user-updated'));
+      setLastTopupAmount(topupAmount);
       setSelectedAmount(null);
       setCustomAmount('');
       setShowTopupSuccess(true);
@@ -148,7 +150,7 @@ export default function ProfilePage() {
             {store.whalePass ? (
               <span style={{ background: 'rgba(99,179,237,.15)', border: '1px solid rgba(99,179,237,.3)', color: 'var(--c-whale-s)', borderRadius: 20, padding: '0.25rem 0.75rem', fontSize: '0.72rem', fontWeight: 600 }}>🐋 Pass Whale</span>
             ) : (
-              <span style={{ background: 'rgba(255,255,255,.06)', border: '1px solid var(--c-border)', color: 'var(--c-text3)', borderRadius: 20, padding: '0.25rem 0.75rem', fontSize: '0.72rem' }}>Gratuit</span>
+              <span style={{ background: 'rgba(255,255,255,.06)', border: '1px solid var(--c-border)', color: 'var(--c-text3)', borderRadius: 20, padding: '0.25rem 0.75rem', fontSize: '0.72rem' }}></span>
             )}
           </div>
         </div>
@@ -215,7 +217,7 @@ export default function ProfilePage() {
 
           {showTopupSuccess && (
             <div style={{ background: 'rgba(72,199,142,.12)', border: '1px solid rgba(72,199,142,.3)', borderRadius: 6, padding: '0.5rem 0.875rem', fontSize: '0.75rem', color: 'var(--c-success)', marginBottom: '0.75rem' }}>
-              ✓ Solde rechargé de {topupAmount} €
+              ✓ Solde rechargé de {lastTopupAmount} €
             </div>
           )}
 
